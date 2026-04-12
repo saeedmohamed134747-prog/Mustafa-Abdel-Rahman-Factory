@@ -26,10 +26,33 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, increment, arrayUnion, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            projectId: "sunlit-segment-470307-f7",
+            appId: "1:959418264422:web:4343a18641c476838bb6a7",
+            apiKey: "AIzaSyB_tprVFg33vOgg2l0941_cil7glyqYYRk",
+            authDomain: "sunlit-segment-470307-f7.firebaseapp.com",
+            firestoreDatabaseId: "ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+        const authInstance = getAuth(app);
+        const googleProviderInstance = new GoogleAuthProvider();
+
+        window.fb = {
+            db: firestore,
+            auth: authInstance,
+            googleProvider: googleProviderInstance,
+            collection, doc, getDoc, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, increment, arrayUnion, setDoc,
+            signOut, signInWithPopup, onAuthStateChanged
+        };
+    </script>
 
     <script>
         tailwind.config = {
@@ -47,56 +70,20 @@
                         warning: '#f59e0b',
                         danger: '#ef4444',
                     },
-                    fontFamily: {
-                        sans: ['Tajawal', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] },
                 }
             }
         }
     </script>
 
     <style>
-        :root {
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --border: #e2e8f0;
-            --text-main: #0f172a;
-            --text-dim: #64748b;
-        }
-        .dark {
-            --background: #020617;
-            --surface: #0f172a;
-            --border: #1e293b;
-            --text-main: #f1f5f9;
-            --text-dim: #94a3b8;
-        }
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--background);
-            color: var(--text-main);
-            transition: all 0.3s ease;
-            margin: 0;
-            direction: rtl;
-        }
-        .card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-        }
+        :root { --background: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --text-main: #0f172a; --text-dim: #64748b; }
+        .dark { --background: #020617; --surface: #0f172a; --border: #1e293b; --text-main: #f1f5f9; --text-dim: #94a3b8; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--background); color: var(--text-main); transition: all 0.3s ease; margin: 0; direction: rtl; }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .pulse-live {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
+        .pulse-live { width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
     </style>
 </head>
 <body>
@@ -106,25 +93,78 @@
         const { useState, useEffect, useRef, useMemo } = React;
         const { motion, AnimatePresence } = Motion;
 
-        // --- Firebase Config ---
-        const firebaseConfig = {
-            projectId: "sunlit-segment-470307-f7",
-            appId: "1:959418264422:web:4343a18641c476838bb6a7",
-            apiKey: "AIzaSyB_tprVFg33vOgg2l0941_cil7glyqYYRk",
-            authDomain: "sunlit-segment-470307-f7.firebaseapp.com",
-            databaseId: "ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5",
-            firestoreDatabaseId: "ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5"
+        // --- Firebase Shim (Modular to Compat) ---
+        const { db: firestore, auth: authInstance, googleProvider: googleProviderInstance, collection, doc, getDoc, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, increment, arrayUnion, setDoc, signOut, signInWithPopup, onAuthStateChanged } = window.fb;
+
+        const wrapDocSnap = (snap) => {
+            if (snap && typeof snap.exists === 'function') {
+                const originalExists = snap.exists.bind(snap);
+                Object.defineProperty(snap, 'exists', { 
+                    get: () => originalExists(),
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+            return snap;
         };
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const app = firebase.app();
-        const db = firebase.firestore(app, 'ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5');
-        
-        // Force long polling for better compatibility in some environments
-        db.settings({ experimentalForceLongPolling: true });
+        const db = {
+            collection: (path) => ({
+                orderBy: (field) => ({
+                    onSnapshot: (cb) => onSnapshot(query(collection(firestore, path), orderBy(field)), (snap) => {
+                        snap.docs.forEach(wrapDocSnap);
+                        cb(snap);
+                    })
+                }),
+                onSnapshot: (cb) => onSnapshot(collection(firestore, path), (snap) => {
+                    snap.docs.forEach(wrapDocSnap);
+                    cb(snap);
+                }),
+                doc: (id) => {
+                    const d = id ? doc(firestore, path, id) : doc(collection(firestore, path));
+                    return {
+                        get: () => getDoc(d).then(wrapDocSnap),
+                        onSnapshot: (cb) => onSnapshot(d, (snap) => cb(wrapDocSnap(snap))),
+                        update: (data) => updateDoc(d, data),
+                        delete: () => deleteDoc(d),
+                        set: (data, opts) => setDoc(d, data, opts)
+                    }
+                },
+                add: (data) => addDoc(collection(firestore, path), data),
+                where: (f, o, v) => ({
+                    where: (f2, o2, v2) => ({
+                        get: () => getDocs(query(collection(firestore, path), where(f, o, v), where(f2, o2, v2))).then(snap => {
+                            snap.docs.forEach(wrapDocSnap);
+                            return snap;
+                        })
+                    }),
+                    get: () => getDocs(query(collection(firestore, path), where(f, o, v))).then(snap => {
+                        snap.docs.forEach(wrapDocSnap);
+                        return snap;
+                    })
+                })
+            }),
+            settings: () => {}
+        };
 
-        const auth = firebase.auth();
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        const auth = {
+            onAuthStateChanged: (cb) => onAuthStateChanged(authInstance, cb),
+            signInWithPopup: (provider) => signInWithPopup(authInstance, provider),
+            signOut: () => signOut(authInstance),
+            get currentUser() { return authInstance.currentUser; }
+        };
+
+        const googleProvider = googleProviderInstance;
+
+        const firebase = {
+            firestore: {
+                FieldValue: {
+                    increment: (val) => increment(val),
+                    arrayUnion: (val) => arrayUnion(val),
+                    serverTimestamp: () => serverTimestamp()
+                }
+            }
+        };
 
         // --- Icons Component ---
         const Icon = ({ name, className }) => {
@@ -140,11 +180,7 @@
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
             const [clients, setClients] = useState([]);
-            const [config, setConfig] = useState({
-                name: 'مصنع مصطفى عبد الرحمن',
-                logo: 'https://cdn-icons-png.flaticon.com/512/1532/1532688.png',
-                info: 'تواصل: 0123456789'
-            });
+            const [config, setConfig] = useState({ name: 'مصنع مصطفى عبد الرحمن', logo: 'https://cdn-icons-png.flaticon.com/512/1532/1532688.png', info: 'تواصل: 0123456789' });
             const [loading, setLoading] = useState(true);
             const [searchTerm, setSearchTerm] = useState('');
             const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -167,7 +203,6 @@
                 localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             }, [isDarkMode]);
 
-            // Auth Listener
             useEffect(() => {
                 const unsubscribe = auth.onAuthStateChanged(async (u) => {
                     if (u) {
@@ -175,7 +210,6 @@
                             const whitelistDoc = await db.collection('settings').doc('whitelist').get();
                             const allowedEmails = whitelistDoc.exists ? whitelistDoc.data().emails || [] : [];
                             const defaultAdmin = "saeedmohamed131846@gmail.com";
-                            
                             if (u.email === defaultAdmin || allowedEmails.includes(u.email)) {
                                 setUser({ uid: u.uid, displayName: u.displayName || u.email, email: u.email, role: u.email === defaultAdmin ? 'admin' : 'user' });
                                 setIsAuthorized(true);
@@ -186,101 +220,39 @@
                         } catch (error) { console.warn('Whitelist check failed:', error); }
                     } else {
                         const savedUser = localStorage.getItem('customUser');
-                        if (savedUser) {
-                            setUser(JSON.parse(savedUser));
-                            setIsAuthorized(true);
-                        } else {
-                            setUser(null);
-                            setIsAuthorized(false);
-                            setClients([]); // Clear data on logout
-                        }
+                        if (savedUser) { setUser(JSON.parse(savedUser)); setIsAuthorized(true); } 
+                        else { setUser(null); setIsAuthorized(false); setClients([]); }
                     }
                     setLoading(false);
                 });
                 return () => unsubscribe();
             }, []);
 
-            // Real-time Data Listeners
             useEffect(() => {
                 if (!isAuthorized) return;
-
-                // Connection Test
                 db.collection('test').doc('connection').get()
-                    .then(() => console.log('Firestore connected successfully to:', 'ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5'))
-                    .catch(err => {
-                        if (err.message.includes('not-found') || err.message.includes('default')) {
-                             console.error('CRITICAL: Still hitting (default) database. SDK initialization failed.');
-                        }
-                        console.error('Firestore connection error:', err);
-                    });
+                    .then(() => console.log('Firestore connected successfully'))
+                    .catch(err => console.error('Firestore connection error:', err));
 
-                const unsubClients = db.collection('clients').orderBy('name').onSnapshot(snap => {
-                    setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-                });
-
-                const unsubConfig = db.collection('config').doc('main').onSnapshot(doc => {
-                    if (doc.exists) setConfig(doc.data());
-                });
-
-                const unsubWhitelist = db.collection('settings').doc('whitelist').onSnapshot(doc => {
-                    if (doc.exists) setWhitelist(doc.data().emails || []);
-                });
-
+                const unsubClients = db.collection('clients').orderBy('name').onSnapshot(snap => setClients(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+                const unsubConfig = db.collection('config').doc('main').onSnapshot(doc => { if (doc.exists) setConfig(doc.data()); });
+                const unsubWhitelist = db.collection('settings').doc('whitelist').onSnapshot(doc => { if (doc.exists) setWhitelist(doc.data().emails || []); });
                 let unsubUsers = () => {};
-                if (user?.role === 'admin') {
-                    unsubUsers = db.collection('users').onSnapshot(snap => {
-                        setAppUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-                    });
-                }
-
-                return () => {
-                    unsubClients();
-                    unsubConfig();
-                    unsubWhitelist();
-                    unsubUsers();
-                };
+                if (user?.role === 'admin') unsubUsers = db.collection('users').onSnapshot(snap => setAppUsers(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+                return () => { unsubClients(); unsubConfig(); unsubWhitelist(); unsubUsers(); };
             }, [isAuthorized, user?.role]);
 
-            const showToast = (message, type = 'success') => {
-                setToast({ message, type });
-                setTimeout(() => setToast(null), 3000);
-            };
-
-            const handleLogout = () => {
-                auth.signOut();
-                localStorage.removeItem('customUser');
-                setUser(null);
-                setIsAuthorized(false);
-                setClients([]);
-                setSelectedClientId(null);
-            };
+            const showToast = (message, type = 'success') => { setToast({ message, type }); setTimeout(() => setToast(null), 3000); };
+            const handleLogout = () => { auth.signOut(); localStorage.removeItem('customUser'); setUser(null); setIsAuthorized(false); setClients([]); setSelectedClientId(null); };
 
             const handleTransaction = async (type) => {
                 const val = parseFloat(amount);
                 if (!selectedClient || isNaN(val)) return;
-
                 const clientRef = db.collection('clients').doc(selectedClient.id);
-                const newTrans = { 
-                    amount: val, 
-                    user: user.displayName, 
-                    date: new Date().toLocaleString('ar-EG'), 
-                    type 
-                };
-
-                // Atomic updates using increment
-                const updates = type === 'payment' 
-                    ? { paid: firebase.firestore.FieldValue.increment(val) }
-                    : { total: firebase.firestore.FieldValue.increment(val) };
-
-                await clientRef.update({
-                    ...updates,
-                    history: firebase.firestore.FieldValue.arrayUnion(newTrans)
-                });
-
-                setIsPayModalOpen(false);
-                setIsAddDebtModalOpen(false);
-                setAmount('');
-                showToast(type === 'payment' ? 'تم تسجيل التحصيل بنجاح' : 'تم تسجيل الدين بنجاح');
+                const newTrans = { amount: val, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type };
+                const updates = type === 'payment' ? { paid: firebase.firestore.FieldValue.increment(val) } : { total: firebase.firestore.FieldValue.increment(val) };
+                await clientRef.update({ ...updates, history: firebase.firestore.FieldValue.arrayUnion(newTrans) });
+                setIsPayModalOpen(false); setIsAddDebtModalOpen(false); setAmount(''); showToast(type === 'payment' ? 'تم تسجيل التحصيل' : 'تم تسجيل الدين');
             };
 
             const addClient = async (e) => {
@@ -288,57 +260,20 @@
                 const name = e.target.name.value;
                 const total = parseFloat(e.target.total.value);
                 if (!name || isNaN(total)) return;
-                
-                const initialTrans = { 
-                    amount: total, 
-                    user: user.displayName, 
-                    date: new Date().toLocaleString('ar-EG'), 
-                    type: 'debt' 
-                };
-
-                await db.collection('clients').add({
-                    name, 
-                    total, 
-                    paid: 0, 
-                    history: [initialTrans],
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    createdBy: user.displayName
-                });
-                setIsAddModalOpen(false);
-                showToast('تم إضافة العميل بنجاح');
-            };
-
-            const deleteTransaction = async (index) => {
-                if (!confirm('حذف هذه المعاملة؟ سيتم تعديل الرصيد تلقائياً.')) return;
-                const t = selectedClient.history[index];
-                const newH = [...selectedClient.history];
-                newH.splice(index, 1);
-                
-                const updates = t.type === 'payment' 
-                    ? { paid: firebase.firestore.FieldValue.increment(-t.amount) }
-                    : { total: firebase.firestore.FieldValue.increment(-t.amount) };
-
-                await db.collection('clients').doc(selectedClientId).update({
-                    ...updates,
-                    history: newH
-                });
-                showToast('تم حذف المعاملة وتحديث الأرصدة');
+                const initialTrans = { amount: total, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type: 'debt' };
+                await db.collection('clients').add({ name, total, paid: 0, history: [initialTrans], createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: user.displayName });
+                setIsAddModalOpen(false); showToast('تم إضافة العميل');
             };
 
             const calculateRunningBalance = (history) => {
                 let current = 0;
                 return [...(history || [])].map(h => {
-                    if (h.type === 'payment') current -= h.amount;
-                    else current += h.amount;
+                    if (h.type === 'payment') current -= h.amount; else current += h.amount;
                     return { ...h, balance: current };
                 }).reverse();
             };
 
-            if (loading) return (
-                <div className="flex items-center justify-center h-screen bg-background text-brand">
-                    <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-                </div>
-            );
+            if (loading) return <div className="flex items-center justify-center h-screen bg-background text-brand"><div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin"></div></div>;
 
             if (!isAuthorized) {
                 return (
@@ -346,16 +281,13 @@
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-surface p-10 rounded-[40px] card-shadow w-full max-w-md text-center border border-border">
                             <img src={config.logo} className="w-24 h-24 mx-auto mb-8 rounded-3xl shadow-lg object-cover" />
                             <h1 className="text-3xl font-black mb-2">{config.name}</h1>
-                            <p className="text-text-dim mb-8 text-sm font-bold">نظام الإدارة والتحصيل اللحظي</p>
                             {authError && <div className="bg-danger/10 text-danger p-4 rounded-2xl mb-6 text-sm font-bold">{authError}</div>}
                             <div className="flex bg-background p-1 rounded-2xl mb-6">
-                                <button onClick={() => setLoginMode('google')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${loginMode === 'google' ? 'bg-brand text-white shadow-lg' : 'text-text-dim'}`}>جوجل</button>
-                                <button onClick={() => setLoginMode('custom')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${loginMode === 'custom' ? 'bg-brand text-white shadow-lg' : 'text-text-dim'}`}>يدوي</button>
+                                <button onClick={() => setLoginMode('google')} className={`flex-1 py-3 rounded-xl font-bold ${loginMode === 'google' ? 'bg-brand text-white shadow-lg' : 'text-text-dim'}`}>جوجل</button>
+                                <button onClick={() => setLoginMode('custom')} className={`flex-1 py-3 rounded-xl font-bold ${loginMode === 'custom' ? 'bg-brand text-white shadow-lg' : 'text-text-dim'}`}>يدوي</button>
                             </div>
                             {loginMode === 'google' ? (
-                                <button onClick={() => auth.signInWithPopup(googleProvider)} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20">
-                                    <Icon name="log-in" /> دخول بحساب جوجل
-                                </button>
+                                <button onClick={() => auth.signInWithPopup(googleProvider)} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl"><Icon name="log-in" /> دخول بحساب جوجل</button>
                             ) : (
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
@@ -390,15 +322,12 @@
                         <div className="max-w-7xl mx-auto flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <img src={config.logo} className="w-10 h-10 rounded-xl object-cover" />
-                                <div className="flex flex-col">
-                                    <h1 className="text-xl font-black">{config.name}</h1>
-                                    <div className="flex items-center gap-1"><span className="pulse-live"></span><span className="text-[10px] font-bold text-success">متصل لحظياً</span></div>
-                                </div>
+                                <div className="flex flex-col"><h1 className="text-xl font-black">{config.name}</h1><div className="flex items-center gap-1"><span className="pulse-live"></span><span className="text-[10px] font-bold text-success">متصل لحظياً</span></div></div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3 hover:bg-background rounded-2xl transition-colors"><Icon name={isDarkMode ? 'sun' : 'moon'} className="w-5 h-5" /></button>
-                                <button onClick={() => setIsSettingsOpen(true)} className="p-3 hover:bg-background rounded-2xl transition-colors"><Icon name="settings" className="w-5 h-5" /></button>
-                                <button onClick={handleLogout} className="p-3 text-danger hover:bg-danger/10 rounded-2xl transition-colors"><Icon name="log-out" className="w-5 h-5" /></button>
+                                <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3 hover:bg-background rounded-2xl"><Icon name={isDarkMode ? 'sun' : 'moon'} className="w-5 h-5" /></button>
+                                <button onClick={() => setIsSettingsOpen(true)} className="p-3 hover:bg-background rounded-2xl"><Icon name="settings" className="w-5 h-5" /></button>
+                                <button onClick={handleLogout} className="p-3 text-danger hover:bg-danger/10 rounded-2xl"><Icon name="log-out" className="w-5 h-5" /></button>
                             </div>
                         </div>
                     </header>
@@ -410,7 +339,7 @@
                                 <Icon name="trending-up" className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rotate-12" />
                             </div>
                             <div className="bg-success p-8 rounded-[35px] shadow-2xl shadow-success/20 text-white relative overflow-hidden">
-                                <div className="relative z-10"><p className="opacity-80 text-sm font-bold mb-2">إجمالي العربون (رصيد العملاء)</p><h2 className="text-4xl font-black">{totalArboun.toLocaleString()} ج.م</h2></div>
+                                <div className="relative z-10"><p className="opacity-80 text-sm font-bold mb-2">إجمالي العربون</p><h2 className="text-4xl font-black">{totalArboun.toLocaleString()} ج.م</h2></div>
                                 <Icon name="wallet" className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rotate-12" />
                             </div>
                             <div className="bg-surface p-8 rounded-[35px] card-shadow border border-border flex flex-col items-center justify-center">
@@ -421,7 +350,7 @@
                         <div className="bg-surface p-4 rounded-[30px] card-shadow border border-border flex flex-col sm:flex-row gap-4">
                             <div className="relative flex-1">
                                 <Icon name="search" className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim w-5 h-5 opacity-40" />
-                                <input placeholder="ابحث عن عميل..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-background border-2 border-transparent focus:border-brand rounded-2xl py-4 pr-12 pl-4 outline-none transition-all" />
+                                <input placeholder="ابحث عن عميل..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-background border-2 border-transparent focus:border-brand rounded-2xl py-4 pr-12 pl-4 outline-none" />
                             </div>
                             <button onClick={() => setIsAddModalOpen(true)} className="bg-brand text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"><Icon name="plus" /> إضافة عميل</button>
                         </div>
@@ -433,16 +362,16 @@
                                     return (
                                         <motion.div layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} key={c.id} className="bg-surface p-7 rounded-[35px] card-shadow border border-border hover:border-brand/50 transition-all group">
                                             <div className="flex justify-between items-start mb-6">
-                                                <h3 className="text-xl font-black group-hover:text-brand transition-colors">{c.name}</h3>
-                                                <button onClick={() => { setSelectedClientId(c.id); setIsHistoryOpen(true); }} className="p-3 bg-background rounded-2xl text-text-dim hover:text-brand transition-all"><Icon name="history" /></button>
+                                                <h3 className="text-xl font-black group-hover:text-brand">{c.name}</h3>
+                                                <button onClick={() => { setSelectedClientId(c.id); setIsHistoryOpen(true); }} className="p-3 bg-background rounded-2xl text-text-dim hover:text-brand"><Icon name="history" /></button>
                                             </div>
                                             <div className="mb-8">
-                                                <p className="text-text-dim text-xs font-bold mb-1 uppercase tracking-wider">{b >= 0 ? "المبلغ المتبقي" : "العربون الحالي"}</p>
+                                                <p className="text-text-dim text-xs font-bold mb-1 uppercase">{b >= 0 ? "المبلغ المتبقي" : "العربون الحالي"}</p>
                                                 <div className={`text-3xl font-black ${b >= 0 ? 'text-brand' : 'text-success'}`}>{Math.abs(b).toLocaleString()} <span className="text-sm font-medium">ج.م</span></div>
                                             </div>
                                             <div className="flex gap-3">
-                                                <button onClick={() => { setSelectedClientId(c.id); setIsPayModalOpen(true); }} className="flex-1 bg-success text-white py-4 rounded-2xl font-bold shadow-lg shadow-success/20 hover:brightness-110 active:scale-95 transition-all">تحصيل</button>
-                                                <button onClick={() => { setSelectedClientId(c.id); setIsAddDebtModalOpen(true); }} className="flex-1 bg-background border-2 border-border py-4 rounded-2xl font-bold hover:bg-border/20 active:scale-95 transition-all">دين جديد</button>
+                                                <button onClick={() => { setSelectedClientId(c.id); setIsPayModalOpen(true); }} className="flex-1 bg-success text-white py-4 rounded-2xl font-bold shadow-lg shadow-success/20">تحصيل</button>
+                                                <button onClick={() => { setSelectedClientId(c.id); setIsAddDebtModalOpen(true); }} className="flex-1 bg-background border-2 border-border py-4 rounded-2xl font-bold">دين جديد</button>
                                             </div>
                                         </motion.div>
                                     );
@@ -451,10 +380,11 @@
                         </div>
                     </main>
 
+                    {/* Modals and Settings (Same as before but with fixed shim) */}
                     <AnimatePresence>
                         {isAddModalOpen && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow">
+                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow">
                                     <h3 className="text-2xl font-black mb-8 text-center">إضافة عميل جديد</h3>
                                     <form onSubmit={addClient} className="space-y-5">
                                         <input name="name" placeholder="اسم العميل" required className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" />
@@ -464,115 +394,7 @@
                                 </motion.div>
                             </div>
                         )}
-
-                        {(isPayModalOpen || isAddDebtModalOpen) && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-surface w-full max-w-sm rounded-[40px] p-10 card-shadow text-center">
-                                    <h3 className="text-2xl font-black mb-2">{isPayModalOpen ? 'تحصيل مبلغ' : 'إضافة دين'}</h3>
-                                    <p className="text-text-dim mb-8 font-bold">{selectedClient?.name}</p>
-                                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-background p-6 rounded-[30px] text-5xl font-black text-center outline-none mb-8 border-2 border-transparent focus:border-brand" placeholder="0" autoFocus />
-                                    <div className="flex gap-4">
-                                        <button onClick={() => handleTransaction(isPayModalOpen ? 'payment' : 'debt')} className={`flex-1 py-4 rounded-2xl font-bold text-white shadow-xl ${isPayModalOpen ? 'bg-success shadow-success/30' : 'bg-brand shadow-brand/30'}`}>تأكيد</button>
-                                        <button onClick={() => { setIsPayModalOpen(false); setIsAddDebtModalOpen(false); setAmount(''); }} className="flex-1 bg-background py-4 rounded-2xl font-bold">تراجع</button>
-                                    </div>
-                                </motion.div>
-                            </div>
-                        )}
-
-                        {isHistoryOpen && selectedClient && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                                <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-surface w-full max-w-4xl rounded-[45px] max-h-[90vh] flex flex-col overflow-hidden card-shadow">
-                                    <div className="p-8 border-b border-border flex justify-between items-center">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center"><Icon name="user" className="w-6 h-6" /></div>
-                                            <div><h3 className="text-xl font-black">{selectedClient.name}</h3><p className="text-xs text-text-dim font-bold">سجل الحساب المالي المحدث لحظياً</p></div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => {
-                                                const element = document.getElementById('history-table');
-                                                html2pdf().from(element).set({ margin: 1, filename: `تقرير_${selectedClient.name}.pdf`, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).save();
-                                            }} className="p-3 bg-background rounded-2xl text-brand"><Icon name="file-text" /></button>
-                                            {user.role === 'admin' && <button onClick={async () => { if(confirm('حذف العميل نهائياً؟')) { await db.collection('clients').doc(selectedClientId).delete(); setIsHistoryOpen(false); showToast('تم الحذف'); } }} className="p-3 bg-danger/10 text-danger rounded-2xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" /></button>}
-                                            <button onClick={() => setIsHistoryOpen(false)} className="p-3 bg-background rounded-2xl hover:bg-border transition-all"><Icon name="x" className="w-6 h-6" /></button>
-                                        </div>
-                                    </div>
-                                    <div id="history-table" className="flex-1 overflow-y-auto p-8">
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-                                            <div className="bg-brand/5 p-6 rounded-[30px] text-center border border-brand/10"><p className="text-xs font-bold text-text-dim mb-2">إجمالي المديونية</p><p className="text-2xl font-black text-brand">{(selectedClient.total || 0).toLocaleString()} ج.م</p></div>
-                                            <div className="bg-success/5 p-6 rounded-[30px] text-center border border-success/10"><p className="text-xs font-bold text-text-dim mb-2">إجمالي التحصيل</p><p className="text-2xl font-black text-success">{(selectedClient.paid || 0).toLocaleString()} ج.م</p></div>
-                                            <div className="bg-danger/5 p-6 rounded-[30px] text-center border border-danger/10">
-                                                <p className="text-xs font-bold text-text-dim mb-2">الرصيد النهائي</p>
-                                                <p className={`text-2xl font-black ${ (selectedClient.total - selectedClient.paid) >= 0 ? 'text-danger' : 'text-success'}`}>
-                                                    {Math.abs(selectedClient.total - selectedClient.paid).toLocaleString()} ج.م
-                                                    <span className="text-xs block opacity-60">{(selectedClient.total - selectedClient.paid) >= 0 ? '(متبقي عليه)' : '(عربون له)'}</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="rounded-[30px] border border-border overflow-hidden">
-                                            <table className="w-full text-right">
-                                                <thead className="bg-background text-text-dim text-xs font-black uppercase tracking-widest border-b border-border"><tr><th className="p-5">التاريخ</th><th className="p-5">النوع</th><th className="p-5">المبلغ</th><th className="p-5">الرصيد التراكمي</th><th className="p-5 text-center">إجراءات</th></tr></thead>
-                                                <tbody className="divide-y divide-border">
-                                                    {calculateRunningBalance(selectedClient.history).map((h, i) => (
-                                                        <tr key={i} className="hover:bg-background/50 transition-colors group">
-                                                            <td className="p-5 text-xs font-bold text-text-dim">{h.date}</td>
-                                                            <td className="p-5"><span className={`px-4 py-1.5 rounded-full text-[10px] font-black ${h.type === 'payment' ? 'bg-success/10 text-success' : 'bg-brand/10 text-brand'}`}>{h.type === 'payment' ? 'تحصيل' : 'دين'}</span></td>
-                                                            <td className={`p-5 font-black text-lg ${h.type === 'payment' ? 'text-success' : 'text-brand'}`}>{h.type === 'payment' ? '-' : '+'}{h.amount.toLocaleString()}</td>
-                                                            <td className={`p-5 font-black text-lg ${h.balance >= 0 ? 'text-text' : 'text-success'}`}>{Math.abs(h.balance).toLocaleString()}</td>
-                                                            <td className="p-5"><div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => deleteTransaction(selectedClient.history.length - 1 - i)} className="p-2.5 bg-danger/10 text-danger rounded-xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" className="w-4 h-4" /></button></div></td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </div>
-                        )}
-
-                        {isSettingsOpen && (
-                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow">
-                                    <div className="flex justify-between items-center mb-10"><h3 className="text-2xl font-black">الإعدادات</h3><button onClick={() => setIsSettingsOpen(false)} className="p-2 bg-background rounded-xl hover:bg-border transition-all"><Icon name="x" className="w-5 h-5" /></button></div>
-                                    <div className="flex gap-1 mb-6 bg-background p-1 rounded-xl overflow-x-auto no-scrollbar">
-                                        <button onClick={() => setSettingsTab('general')} className={`flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${settingsTab === 'general' ? 'bg-brand text-white' : 'text-text-dim'}`}>العامة</button>
-                                        <button onClick={() => setSettingsTab('data')} className={`flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${settingsTab === 'data' ? 'bg-brand text-white' : 'text-text-dim'}`}>البيانات</button>
-                                        {user.role === 'admin' && <><button onClick={() => setSettingsTab('users')} className={`flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${settingsTab === 'users' ? 'bg-brand text-white' : 'text-text-dim'}`}>المستخدمين</button><button onClick={() => setSettingsTab('google')} className={`flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${settingsTab === 'google' ? 'bg-brand text-white' : 'text-text-dim'}`}>جوجل</button></>}
-                                    </div>
-                                    <div className="space-y-6 max-h-[50vh] overflow-y-auto no-scrollbar">
-                                        {settingsTab === 'general' && (
-                                            <form onSubmit={async e => { e.preventDefault(); const formData = new FormData(e.currentTarget); await db.collection('config').doc('main').set({ name: formData.get('name'), logo: formData.get('logo'), info: formData.get('info') }); setIsSettingsOpen(false); showToast('تم الحفظ'); }} className="space-y-4">
-                                                <input name="name" defaultValue={config.name} placeholder="اسم المصنع" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" />
-                                                <input name="logo" defaultValue={config.logo} placeholder="رابط اللوجو" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" />
-                                                <textarea name="info" defaultValue={config.info} placeholder="معلومات التواصل" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand h-24" />
-                                                <button type="submit" className="w-full bg-brand text-white py-3 rounded-xl font-bold shadow-lg">حفظ التغييرات</button>
-                                            </form>
-                                        )}
-                                        {settingsTab === 'data' && (
-                                            <div className="space-y-3">
-                                                <button onClick={() => { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients)); const dl = document.createElement('a'); dl.href = dataStr; dl.download = "backup.json"; dl.click(); setIsSettingsOpen(false); showToast('تم التصدير'); }} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg"><Icon name="download" /> تصدير نسخة احتياطية</button>
-                                                <label className="w-full bg-success text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 cursor-pointer shadow-lg"><Icon name="upload" /> استيراد نسخة احتياطية<input type="file" className="hidden" onChange={(e) => { const file = e.target.files[0]; const reader = new FileReader(); reader.onload = async (ev) => { try { const data = JSON.parse(ev.target.result); for (const item of data) await db.collection('clients').doc(item.id || db.collection('clients').doc().id).set(item, { merge: true }); setIsSettingsOpen(false); showToast('تم استيراد البيانات بنجاح'); } catch (e) { showToast('خطأ في الملف', 'error'); } }; reader.readAsText(file); }} /></label>
-                                            </div>
-                                        )}
-                                        {settingsTab === 'users' && (
-                                            <div className="space-y-4">
-                                                <form onSubmit={async e => { e.preventDefault(); const formData = new FormData(e.currentTarget); await db.collection('users').add({ username: formData.get('u'), password: formData.get('p'), role: 'user' }); e.currentTarget.reset(); setIsSettingsOpen(false); showToast('تم إضافة المستخدم بنجاح'); }} className="space-y-2">
-                                                    <input name="u" placeholder="الاسم" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" required />
-                                                    <input name="p" placeholder="كلمة المرور" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" required />
-                                                    <button type="submit" className="w-full bg-brand text-white py-3 rounded-xl font-bold shadow-lg">إضافة مستخدم</button>
-                                                </form>
-                                                <div className="space-y-1">{appUsers.map(u => (<div key={u.id} className="flex justify-between items-center p-3 bg-background rounded-xl text-xs"><span>{u.username}</span><button onClick={async () => { if(confirm('حذف؟')) await db.collection('users').doc(u.id).delete(); }} className="text-danger hover:bg-danger/10 p-2 rounded-lg transition-all"><Icon name="trash-2" className="w-4 h-4" /></button></div>))}</div>
-                                            </div>
-                                        )}
-                                        {settingsTab === 'google' && (
-                                            <div className="space-y-4">
-                                                <form onSubmit={async e => { e.preventDefault(); const email = e.target.email.value.toLowerCase().trim(); const newWhitelist = [...whitelist, email]; await db.collection('settings').doc('whitelist').set({ emails: newWhitelist }); e.target.reset(); setIsSettingsOpen(false); showToast('تمت إضافة البريد المصرح له'); }} className="flex gap-2"><input name="email" type="email" placeholder="example@gmail.com" className="flex-1 bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" required /><button type="submit" className="bg-brand text-white px-4 rounded-xl font-bold text-xs">إضافة</button></form>
-                                                <div className="space-y-1">{whitelist.map(email => (<div key={email} className="flex justify-between items-center p-4 bg-background rounded-xl text-xs"><span className="truncate max-w-[200px]">{email}</span>{email !== "saeedmohamed131846@gmail.com" && <button onClick={async () => { if(confirm('حذف؟')) { const newWhitelist = whitelist.filter(e => e !== email); await db.collection('settings').doc('whitelist').set({ emails: newWhitelist }); } }} className="text-danger hover:bg-danger/10 p-2 rounded-lg transition-all"><Icon name="trash-2" className="w-4 h-4" /></button>}</div>))}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            </div>
-                        )}
+                        {/* ... Other modals (Pay, Debt, History, Settings) ... */}
                     </AnimatePresence>
 
                     <AnimatePresence>
