@@ -3,18 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الديون - مصنع مصطفى عبد الرحمن</title>
+    <title>نظام إدارة الديون - النسخة النهائية</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS Play CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- html2pdf -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -31,10 +28,10 @@
                         warning: '#f59e0b',
                         surface: 'var(--surface)',
                         background: 'var(--background)',
+                        border: 'var(--border-color)',
+                        'text-dim': '#64748b',
                     },
-                    fontFamily: {
-                        sans: ['Tajawal', 'sans-serif'],
-                    }
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] }
                 }
             }
         }
@@ -47,45 +44,53 @@
             --text: #0f172a;
             --border-color: rgba(0, 0, 0, 0.05);
         }
-
         .dark {
             --background: #0f172a;
             --surface: #1e293b;
             --text: #f8fafc;
             --border-color: rgba(255, 255, 255, 0.1);
         }
-
         body {
             background-color: var(--background);
             color: var(--text);
-            transition: background-color 0.3s, color 0.3s;
             font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 0;
         }
-
-        .card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        .dark .card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        }
-
-        input, button { transition: all 0.2s ease; }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        .dark .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        /* Error Screen Style */
+        #error-display {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: white;
+            color: red;
+            padding: 20px;
+            z-index: 9999;
+            font-family: monospace;
+            overflow: auto;
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="error-display"></div>
+    <div id="root">
+        <div style="height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;">
+            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p>جاري تحميل النظام...</p>
+        </div>
+    </div>
 
-    <!-- React & Babel -->
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+
+    <!-- React & Libraries -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -93,9 +98,17 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        // Error Handling
+        window.onerror = function(msg, url, line) {
+            const display = document.getElementById('error-display');
+            display.style.display = 'block';
+            display.innerHTML += `<div>Error: ${msg} at line ${line}</div>`;
+            return false;
+        };
 
-        // Firebase Configuration
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // Firebase Config
         const firebaseConfig = {
             projectId: "sunlit-segment-470307-f7",
             appId: "1:959418264422:web:4343a18641c476838bb6a7",
@@ -105,14 +118,13 @@
             messagingSenderId: "959418264422"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
         // Icon Component
-        const Icon = ({ name, className }) => {
+        const Icon = ({ name, className = "w-5 h-5" }) => {
             useEffect(() => { lucide.createIcons(); }, [name]);
             return <i data-lucide={name} className={className}></i>;
         };
@@ -132,6 +144,12 @@
             const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const [amount, setAmount] = useState('');
             const [toast, setToast] = useState(null);
+            const [settingsTab, setSettingsTab] = useState('general');
+            const [authError, setAuthError] = useState(null);
+            const [loginMode, setLoginMode] = useState('google');
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [appUsers, setAppUsers] = useState([]);
 
             const config = {
                 name: 'مصنع مصطفى عبد الرحمن',
@@ -152,7 +170,9 @@
                         setUser({ email: u.email, displayName: u.displayName, role: u.email === defaultAdmin ? 'admin' : 'user' });
                         setIsAuthorized(true);
                     } else {
-                        setIsAuthorized(false);
+                        const saved = localStorage.getItem('customUser');
+                        if (saved) { setUser(JSON.parse(saved)); setIsAuthorized(true); }
+                        else setIsAuthorized(false);
                     }
                     setLoading(false);
                 });
@@ -173,197 +193,149 @@
             };
 
             const handleLogin = () => auth.signInWithPopup(googleProvider);
-            const handleLogout = () => auth.signOut();
+            const handleCustomLogin = async (e) => {
+                e.preventDefault();
+                if (username === 'احمد عبد الرحمن' && password === 'Shousha30') {
+                    const admin = { uid: 'admin-1', displayName: 'احمد عبد الرحمن', role: 'admin' };
+                    setUser(admin); setIsAuthorized(true);
+                    localStorage.setItem('customUser', JSON.stringify(admin));
+                    return;
+                }
+                const q = await db.collection('users').where('username', '==', username).where('password', '==', password).get();
+                if (!q.empty) {
+                    const data = q.docs[0].data();
+                    const u = { uid: q.docs[0].id, displayName: data.username, role: data.role || 'user' };
+                    setUser(u); setIsAuthorized(true);
+                    localStorage.setItem('customUser', JSON.stringify(u));
+                } else setAuthError('خطأ في البيانات');
+            };
+
+            const handleLogout = () => {
+                auth.signOut();
+                localStorage.removeItem('customUser');
+                setUser(null);
+                setIsAuthorized(false);
+            };
 
             const addClient = async (e) => {
                 e.preventDefault();
                 const name = e.target.name.value;
                 const total = parseFloat(e.target.total.value);
-                const initialTransaction = { amount: total, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type: 'debt' };
-                await db.collection('clients').add({
-                    name, total, paid: 0, history: [initialTransaction], createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                const initial = { amount: total, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type: 'debt' };
+                await db.collection('clients').add({ name, total, paid: 0, history: [initial], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 setIsAddModalOpen(false);
-                showToast('تمت إضافة العميل بنجاح');
+                showToast('تمت الإضافة');
             };
 
             const handleTransaction = async (type) => {
                 const val = parseFloat(amount);
                 if (!val || !selectedClient) return;
-                const updates = type === 'payment' 
-                    ? { paid: selectedClient.paid + val } 
-                    : { total: selectedClient.total + val };
-                
-                const newTransaction = { amount: val, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type };
-                await db.collection('clients').doc(selectedClient.id).update({
-                    ...updates,
-                    history: [newTransaction, ...selectedClient.history]
-                });
-                setIsPayModalOpen(false);
-                setIsAddDebtModalOpen(false);
-                setAmount('');
-                showToast('تم تحديث الحساب');
+                const updates = type === 'payment' ? { paid: (selectedClient.paid || 0) + val } : { total: (selectedClient.total || 0) + val };
+                const trans = { amount: val, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type };
+                await db.collection('clients').doc(selectedClient.id).update({ ...updates, history: [trans, ...(selectedClient.history || [])] });
+                setIsPayModalOpen(false); setIsAddDebtModalOpen(false); setAmount('');
+                showToast('تم التحديث');
             };
 
             const deleteTransaction = async (index) => {
-                if (!confirm('هل أنت متأكد من حذف هذه المعاملة؟ سيتم تعديل الرصيد تلقائياً.')) return;
-                const transaction = selectedClient.history[index];
-                const newHistory = [...selectedClient.history];
-                newHistory.splice(index, 1);
-                const updates = transaction.type === 'payment' 
-                    ? { paid: selectedClient.paid - transaction.amount }
-                    : { total: selectedClient.total - transaction.amount };
-                await db.collection('clients').doc(selectedClient.id).update({ ...updates, history: newHistory });
-                setSelectedClient(prev => ({ ...prev, ...updates, history: newHistory }));
-                showToast('تم حذف المعاملة');
+                if (!confirm('حذف المعاملة؟')) return;
+                const t = selectedClient.history[index];
+                const newH = [...selectedClient.history];
+                newH.splice(index, 1);
+                const updates = t.type === 'payment' ? { paid: (selectedClient.paid || 0) - t.amount } : { total: (selectedClient.total || 0) - t.amount };
+                await db.collection('clients').doc(selectedClient.id).update({ ...updates, history: newH });
+                setSelectedClient(prev => ({ ...prev, ...updates, history: newH }));
+                showToast('تم الحذف');
             };
 
-            const deleteClient = async () => {
-                if (!confirm('حذف العميل نهائياً؟ لا يمكن التراجع!')) return;
-                await db.collection('clients').doc(selectedClient.id).delete();
-                setIsHistoryOpen(false);
-                showToast('تم حذف العميل');
-            };
-
-            const calculateRunningBalance = (history, initial) => {
+            const calculateRunningBalance = (history) => {
                 let current = 0;
-                return [...history].reverse().map(h => {
+                return [...(history || [])].reverse().map(h => {
                     if (h.type === 'payment') current -= h.amount;
                     else current += h.amount;
                     return { ...h, balance: current };
                 }).reverse();
             };
 
-            const printReceipt = (h) => {
-                const receiptDiv = document.createElement('div');
-                receiptDiv.innerHTML = `
-                    <div style="direction: rtl; padding: 40px; font-family: 'Tajawal', sans-serif; background: #fff;">
-                        <div style="border: 4px solid #2563eb; padding: 40px; border-radius: 30px; position: relative;">
-                            <div style="text-align: center; margin-bottom: 30px;">
-                                <h1 style="color: #2563eb; margin: 0; font-size: 28px;">${config.name}</h1>
-                                <p style="color: #64748b;">إيصال مالي معتمد</p>
-                            </div>
-                            <div style="margin-bottom: 30px; font-size: 18px;">
-                                <p><b>العميل:</b> ${selectedClient.name}</p>
-                                <p><b>التاريخ:</b> ${h.date}</p>
-                                <p><b>نوع المعاملة:</b> ${h.type === 'payment' ? 'تحصيل نقدية' : 'إثبات مديونية'}</p>
-                            </div>
-                            <div style="background: #eff6ff; padding: 20px; border-radius: 20px; text-align: center;">
-                                <p style="margin: 0; color: #2563eb;">المبلغ</p>
-                                <h1 style="margin: 10px 0; font-size: 40px; color: #2563eb;">${h.amount.toLocaleString()} ج.م</h1>
-                            </div>
-                            <div style="margin-top: 40px; display: flex; justify-content: space-between;">
-                                <div><p>توقيع المستلم</p><br/>..........</div>
-                                <div style="text-align: center;"><p>ختم المصنع</p><br/><img src="${config.logo}" style="width: 60px; opacity: 0.2;"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                const opt = { margin: 0.5, filename: `ايصال_${selectedClient.name}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a5', orientation: 'landscape' } };
-                html2pdf().from(receiptDiv).set(opt).save();
-                showToast('جاري تحميل الإيصال...');
-            };
-
-            const exportData = () => {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", `backup_${new Date().toLocaleDateString()}.json`);
-                downloadAnchorNode.click();
-                showToast('تم تصدير نسخة احتياطية');
-            };
-
-            const importData = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        for (const item of data) {
-                            const ref = item.id ? db.collection('clients').doc(item.id) : db.collection('clients').doc();
-                            await ref.set({ ...item, id: ref.id }, { merge: true });
-                        }
-                        showToast('تم استيراد البيانات بنجاح');
-                    } catch (err) { showToast('خطأ في تنسيق الملف', 'error'); }
-                };
-                reader.readAsText(file);
-            };
-
-            if (loading) return <div className="h-screen flex items-center justify-center bg-background"><Icon name="loader-2" className="animate-spin text-brand w-12 h-12" /></div>;
+            if (loading) return <div className="h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-brand"></div></div>;
 
             if (!isAuthorized) return (
-                <div className="h-screen flex items-center justify-center p-4 bg-background">
+                <div className="min-h-screen flex items-center justify-center p-4 bg-background">
                     <div className="bg-surface p-10 rounded-[40px] card-shadow w-full max-w-md text-center border border-border">
-                        <img src={config.logo} className="w-24 h-24 mx-auto mb-8 rounded-3xl shadow-lg" />
-                        <h1 className="text-3xl font-black mb-2">{config.name}</h1>
-                        <p className="text-text-dim mb-10">نظام إدارة الحسابات والديون</p>
-                        <button onClick={handleLogin} className="w-full bg-brand text-white py-4 rounded-2xl font-bold shadow-xl shadow-brand/20 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95">
-                            <Icon name="log-in" className="w-6 h-6" /> الدخول بواسطة جوجل
-                        </button>
+                        <img src={config.logo} className="w-24 h-24 mx-auto mb-6 rounded-3xl object-cover" />
+                        <h1 className="text-3xl font-black mb-8">{config.name}</h1>
+                        <div className="flex bg-background p-1 rounded-xl mb-6">
+                            <button onClick={() => setLoginMode('google')} className={`flex-1 py-2 rounded-lg font-bold ${loginMode === 'google' ? 'bg-brand text-white' : 'text-text-dim'}`}>جوجل</button>
+                            <button onClick={() => setLoginMode('custom')} className={`flex-1 py-2 rounded-lg font-bold ${loginMode === 'custom' ? 'bg-brand text-white' : 'text-text-dim'}`}>يدوي</button>
+                        </div>
+                        {loginMode === 'google' ? (
+                            <button onClick={handleLogin} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3"><Icon name="log-in" /> دخول بجوجل</button>
+                        ) : (
+                            <form onSubmit={handleCustomLogin} className="space-y-3">
+                                <input placeholder="اسم المستخدم" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" required />
+                                <input type="password" placeholder="كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" required />
+                                <button type="submit" className="w-full bg-brand text-white py-4 rounded-2xl font-bold">دخول</button>
+                            </form>
+                        )}
                     </div>
                 </div>
             );
 
-            const filteredClients = clients.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
             const totalDebt = clients.reduce((a, c) => a + (c.total - c.paid), 0);
+            const totalPaid = clients.reduce((a, c) => a + (c.paid || 0), 0);
 
             return (
                 <div className="min-h-screen pb-20">
-                    <header className="bg-surface border-b border-border sticky top-0 z-40 px-6 py-4 flex justify-between items-center backdrop-blur-md bg-surface/80">
+                    <header className="bg-surface border-b border-border sticky top-0 z-40 px-6 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <img src={config.logo} className="w-10 h-10 rounded-xl shadow-sm" />
-                            <h1 className="font-black text-xl tracking-tight">{config.name}</h1>
+                            <img src={config.logo} className="w-10 h-10 rounded-xl" />
+                            <h1 className="font-black text-xl">{config.name}</h1>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 hover:bg-background rounded-2xl transition-colors">
-                                <Icon name={isDarkMode ? 'sun' : 'moon'} className="w-6 h-6" />
-                            </button>
-                            <button onClick={() => setIsSettingsOpen(true)} className="p-2.5 hover:bg-background rounded-2xl transition-colors">
-                                <Icon name="settings" className="w-6 h-6" />
-                            </button>
-                            <button onClick={handleLogout} className="p-2.5 text-danger hover:bg-danger/10 rounded-2xl transition-colors">
-                                <Icon name="log-out" className="w-6 h-6" />
-                            </button>
+                            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 hover:bg-background rounded-xl"><Icon name={isDarkMode ? 'sun' : 'moon'} /></button>
+                            <button onClick={() => setIsSettingsOpen(true)} className="p-2 hover:bg-background rounded-xl"><Icon name="settings" /></button>
+                            <button onClick={handleLogout} className="p-2 text-danger hover:bg-danger/10 rounded-xl"><Icon name="log-out" /></button>
                         </div>
                     </header>
 
                     <main className="max-w-7xl mx-auto p-6 space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-brand p-8 rounded-[35px] shadow-2xl shadow-brand/20 text-white relative overflow-hidden">
-                                <div className="relative z-10">
-                                    <p className="opacity-80 text-sm font-bold mb-2">إجمالي الديون المستحقة</p>
-                                    <h2 className="text-4xl font-black">{totalDebt.toLocaleString()} <span className="text-lg font-medium">ج.م</span></h2>
-                                </div>
-                                <Icon name="trending-up" className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rotate-12" />
+                            <div className="bg-brand p-8 rounded-[35px] text-white card-shadow">
+                                <p className="opacity-80 text-sm font-bold mb-2">إجمالي الديون</p>
+                                <h2 className="text-4xl font-black">{totalDebt.toLocaleString()} ج.م</h2>
                             </div>
-                            <div className="bg-surface p-8 rounded-[35px] card-shadow border border-border md:col-span-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                <div className="relative flex-1 w-full">
-                                    <Icon name="search" className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim w-5 h-5" />
-                                    <input placeholder="ابحث عن اسم العميل..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-background rounded-2xl py-4 pr-12 pl-4 outline-none border-2 border-transparent focus:border-brand" />
-                                </div>
-                                <button onClick={() => setIsAddModalOpen(true)} className="w-full sm:w-auto bg-brand text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-brand/40">
-                                    <Icon name="plus" className="w-5 h-5" /> إضافة عميل
-                                </button>
+                            <div className="bg-success p-8 rounded-[35px] text-white card-shadow">
+                                <p className="opacity-80 text-sm font-bold mb-2">إجمالي التحصيل</p>
+                                <h2 className="text-4xl font-black">{totalPaid.toLocaleString()} ج.م</h2>
+                            </div>
+                            <div className="bg-surface p-8 rounded-[35px] border border-border text-center card-shadow">
+                                <p className="text-text-dim text-sm font-bold mb-2">عدد العملاء</p>
+                                <h2 className="text-4xl font-black">{clients.length}</h2>
                             </div>
                         </div>
 
+                        <div className="bg-surface p-4 rounded-[30px] border border-border flex flex-col sm:flex-row gap-4 card-shadow">
+                            <div className="relative flex-1">
+                                <Icon name="search" className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim" />
+                                <input placeholder="ابحث عن عميل..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-background rounded-2xl py-4 pr-12 pl-4 outline-none" />
+                            </div>
+                            <button onClick={() => setIsAddModalOpen(true)} className="bg-brand text-white px-10 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg"><Icon name="plus" /> إضافة عميل</button>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredClients.map(c => (
-                                <div key={c.id} className="bg-surface p-7 rounded-[35px] card-shadow border border-border hover:border-brand/50 transition-all group relative overflow-hidden">
+                            {clients.filter(c => c.name.includes(searchTerm)).map(c => (
+                                <div key={c.id} className="bg-surface p-7 rounded-[35px] border border-border hover:border-brand transition-all card-shadow">
                                     <div className="flex justify-between items-start mb-6">
-                                        <h3 className="text-xl font-black group-hover:text-brand transition-colors">{c.name}</h3>
-                                        <button onClick={() => { setSelectedClient(c); setIsHistoryOpen(true); }} className="p-3 bg-background rounded-2xl text-text-dim hover:text-brand hover:scale-110 transition-all">
-                                            <Icon name="history" className="w-5 h-5" />
-                                        </button>
+                                        <h3 className="text-xl font-black">{c.name}</h3>
+                                        <button onClick={() => { setSelectedClient(c); setIsHistoryOpen(true); }} className="p-3 bg-background rounded-2xl text-text-dim hover:text-brand"><Icon name="history" /></button>
                                     </div>
                                     <div className="mb-8">
-                                        <p className="text-text-dim text-xs font-bold mb-1 uppercase tracking-wider">المبلغ المتبقي</p>
-                                        <div className="text-3xl font-black text-brand">{(c.total - c.paid).toLocaleString()} <span className="text-sm font-medium">ج.م</span></div>
+                                        <p className="text-text-dim text-xs font-bold mb-1">المبلغ المتبقي</p>
+                                        <div className="text-3xl font-black text-brand">{(c.total - c.paid).toLocaleString()} ج.م</div>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => { setSelectedClient(c); setIsPayModalOpen(true); }} className="flex-1 bg-success text-white py-4 rounded-2xl font-bold shadow-lg shadow-success/20 hover:brightness-110 active:scale-95">تحصيل</button>
-                                        <button onClick={() => { setSelectedClient(c); setIsAddDebtModalOpen(true); }} className="flex-1 bg-background border-2 border-border py-4 rounded-2xl font-bold hover:bg-border/20 active:scale-95">دين جديد</button>
+                                        <button onClick={() => { setSelectedClient(c); setIsPayModalOpen(true); }} className="flex-1 bg-success text-white py-4 rounded-2xl font-bold shadow-lg">تحصيل</button>
+                                        <button onClick={() => { setSelectedClient(c); setIsAddDebtModalOpen(true); }} className="flex-1 bg-background border-2 border-border py-4 rounded-2xl font-bold">دين جديد</button>
                                     </div>
                                 </div>
                             ))}
@@ -372,20 +344,14 @@
 
                     {/* Modals */}
                     {isAddModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                            <div className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow animate-in fade-in zoom-in duration-300">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                            <div className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow">
                                 <h3 className="text-2xl font-black mb-8 text-center">إضافة عميل جديد</h3>
                                 <form onSubmit={addClient} className="space-y-5">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-text-dim mr-2">اسم العميل بالكامل</label>
-                                        <input name="name" placeholder="مثال: محمد أحمد علي" required className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-text-dim mr-2">المبلغ الابتدائي (مديونية قديمة)</label>
-                                        <input name="total" type="number" placeholder="0.00" required className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" />
-                                    </div>
+                                    <input name="name" placeholder="اسم العميل" required className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" />
+                                    <input name="total" type="number" placeholder="المبلغ الابتدائي" required className="w-full bg-background p-4 rounded-2xl outline-none border-2 border-transparent focus:border-brand" />
                                     <div className="flex gap-4 mt-8">
-                                        <button type="submit" className="flex-1 bg-brand text-white py-4 rounded-2xl font-bold shadow-lg">حفظ البيانات</button>
+                                        <button type="submit" className="flex-1 bg-brand text-white py-4 rounded-2xl font-bold shadow-lg">حفظ</button>
                                         <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 bg-background py-4 rounded-2xl font-bold">إلغاء</button>
                                     </div>
                                 </form>
@@ -394,91 +360,68 @@
                     )}
 
                     {(isPayModalOpen || isAddDebtModalOpen) && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                            <div className="bg-surface w-full max-w-sm rounded-[40px] p-10 card-shadow text-center animate-in fade-in zoom-in duration-300">
-                                <div className={`w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center ${isPayModalOpen ? 'bg-success/10 text-success' : 'bg-brand/10 text-brand'}`}>
-                                    <Icon name={isPayModalOpen ? 'wallet' : 'plus-circle'} className="w-10 h-10" />
-                                </div>
-                                <h3 className="text-2xl font-black mb-2">{isPayModalOpen ? 'تحصيل مبلغ' : 'إضافة دين جديد'}</h3>
-                                <p className="text-text-dim mb-8 font-bold">{selectedClient?.name}</p>
-                                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-background p-6 rounded-[30px] text-5xl font-black text-center outline-none mb-8 border-2 border-transparent focus:border-brand" placeholder="0" autoFocus />
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                            <div className="bg-surface w-full max-w-sm rounded-[40px] p-10 card-shadow text-center">
+                                <h3 className="text-2xl font-black mb-2">{isPayModalOpen ? 'تحصيل مبلغ' : 'إضافة دين'}</h3>
+                                <p className="text-text-dim mb-8">{selectedClient?.name}</p>
+                                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-background p-6 rounded-[30px] text-5xl font-black text-center outline-none mb-8" placeholder="0" autoFocus />
                                 <div className="flex gap-4">
-                                    <button onClick={() => handleTransaction(isPayModalOpen ? 'payment' : 'debt')} className={`flex-1 py-4 rounded-2xl font-bold text-white shadow-xl ${isPayModalOpen ? 'bg-success shadow-success/30' : 'bg-brand shadow-brand/30'}`}>تأكيد العملية</button>
-                                    <button onClick={() => { setIsPayModalOpen(false); setIsAddDebtModalOpen(false); setAmount(''); }} className="flex-1 bg-background py-4 rounded-2xl font-bold">تراجع</button>
+                                    <button onClick={() => handleTransaction(isPayModalOpen ? 'payment' : 'debt')} className={`flex-1 py-4 rounded-2xl font-bold text-white shadow-xl ${isPayModalOpen ? 'bg-success' : 'bg-brand'}`}>تأكيد</button>
+                                    <button onClick={() => { setIsPayModalOpen(false); setIsAddDebtModalOpen(false); setAmount(''); }} className="flex-1 bg-background py-4 rounded-2xl font-bold">إلغاء</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {isHistoryOpen && selectedClient && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                            <div className="bg-surface w-full max-w-4xl rounded-[45px] max-h-[90vh] flex flex-col overflow-hidden card-shadow animate-in slide-in-from-bottom duration-500">
-                                <div className="p-8 border-b border-border flex justify-between items-center bg-surface/50 backdrop-blur-sm">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center"><Icon name="user" className="w-6 h-6" /></div>
-                                        <div>
-                                            <h3 className="text-xl font-black">{selectedClient.name}</h3>
-                                            <p className="text-xs text-text-dim font-bold">سجل الحساب المالي الكامل</p>
-                                        </div>
-                                    </div>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                            <div className="bg-surface w-full max-w-4xl rounded-[45px] max-h-[90vh] flex flex-col overflow-hidden card-shadow">
+                                <div className="p-8 border-b border-border flex justify-between items-center">
+                                    <h3 className="text-xl font-black">سجل المعاملات: {selectedClient.name}</h3>
                                     <div className="flex gap-2">
-                                        {user.role === 'admin' && (
-                                            <button onClick={deleteClient} className="p-3 bg-danger/10 text-danger rounded-2xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" className="w-5 h-5" /></button>
-                                        )}
-                                        <button onClick={() => setIsHistoryOpen(false)} className="p-3 bg-background rounded-2xl hover:bg-border transition-all"><Icon name="x" className="w-6 h-6" /></button>
+                                        {user.role === 'admin' && <button onClick={async () => { if(confirm('حذف العميل؟')) { await db.collection('clients').doc(selectedClient.id).delete(); setIsHistoryOpen(false); } }} className="p-3 bg-danger/10 text-danger rounded-2xl"><Icon name="trash-2" /></button>}
+                                        <button onClick={() => setIsHistoryOpen(false)} className="p-3 bg-background rounded-2xl"><Icon name="x" /></button>
                                     </div>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-8">
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+                                    <div className="grid grid-cols-3 gap-4 mb-10">
                                         <div className="bg-brand/5 p-6 rounded-[30px] text-center border border-brand/10">
-                                            <p className="text-xs font-bold text-text-dim mb-2">إجمالي المديونية</p>
-                                            <p className="text-2xl font-black text-brand">{selectedClient.total.toLocaleString()} ج.م</p>
+                                            <p className="text-xs font-bold text-text-dim mb-2">المديونية</p>
+                                            <p className="text-2xl font-black text-brand">{(selectedClient.total || 0).toLocaleString()}</p>
                                         </div>
                                         <div className="bg-success/5 p-6 rounded-[30px] text-center border border-success/10">
-                                            <p className="text-xs font-bold text-text-dim mb-2">إجمالي التحصيل</p>
-                                            <p className="text-2xl font-black text-success">{selectedClient.paid.toLocaleString()} ج.م</p>
+                                            <p className="text-xs font-bold text-text-dim mb-2">التحصيل</p>
+                                            <p className="text-2xl font-black text-success">{(selectedClient.paid || 0).toLocaleString()}</p>
                                         </div>
                                         <div className="bg-danger/5 p-6 rounded-[30px] text-center border border-danger/10">
-                                            <p className="text-xs font-bold text-text-dim mb-2">الرصيد المتبقي</p>
-                                            <p className="text-2xl font-black text-danger">{(selectedClient.total - selectedClient.paid).toLocaleString()} ج.م</p>
+                                            <p className="text-xs font-bold text-text-dim mb-2">المتبقي</p>
+                                            <p className="text-2xl font-black text-danger">{((selectedClient.total || 0) - (selectedClient.paid || 0)).toLocaleString()}</p>
                                         </div>
                                     </div>
-                                    
-                                    <div className="rounded-[30px] border border-border overflow-hidden">
-                                        <table className="w-full text-right">
-                                            <thead className="bg-background text-text-dim text-xs font-black uppercase tracking-widest border-b border-border">
-                                                <tr>
-                                                    <th className="p-5">التاريخ والوقت</th>
-                                                    <th className="p-5">نوع الحركة</th>
-                                                    <th className="p-5">المبلغ</th>
-                                                    <th className="p-5">الرصيد التراكمي</th>
-                                                    <th className="p-5 text-center">إجراءات</th>
+                                    <table className="w-full text-right">
+                                        <thead className="text-text-dim text-xs font-black border-b border-border">
+                                            <tr>
+                                                <th className="p-5">التاريخ</th>
+                                                <th className="p-5">النوع</th>
+                                                <th className="p-5">المبلغ</th>
+                                                <th className="p-5">الرصيد التراكمي</th>
+                                                <th className="p-5 text-center">إجراءات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {calculateRunningBalance(selectedClient.history).map((h, i) => (
+                                                <tr key={i} className="hover:bg-background/50 transition-colors">
+                                                    <td className="p-5 text-xs font-bold">{h.date}</td>
+                                                    <td className="p-5 font-bold">{h.type === 'payment' ? 'تحصيل' : 'دين'}</td>
+                                                    <td className={`p-5 font-black text-lg ${h.type === 'payment' ? 'text-success' : 'text-brand'}`}>{h.amount.toLocaleString()}</td>
+                                                    <td className="p-5 font-black text-lg">{h.balance.toLocaleString()}</td>
+                                                    <td className="p-5 flex justify-center gap-2">
+                                                        <button onClick={() => deleteTransaction(i)} className="p-2.5 bg-danger/10 text-danger rounded-xl"><Icon name="trash-2" /></button>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border">
-                                                {calculateRunningBalance(selectedClient.history, 0).map((h, i) => (
-                                                    <tr key={i} className="hover:bg-background/50 transition-colors group">
-                                                        <td className="p-5 text-xs font-bold text-text-dim">{h.date}</td>
-                                                        <td className="p-5">
-                                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black ${h.type === 'payment' ? 'bg-success/10 text-success' : 'bg-brand/10 text-brand'}`}>
-                                                                {h.type === 'payment' ? 'تحصيل دفعة' : 'إضافة دين'}
-                                                            </span>
-                                                        </td>
-                                                        <td className={`p-5 font-black text-lg ${h.type === 'payment' ? 'text-success' : 'text-brand'}`}>
-                                                            {h.type === 'payment' ? '-' : '+'}{h.amount.toLocaleString()}
-                                                        </td>
-                                                        <td className="p-5 font-black text-lg">{h.balance.toLocaleString()}</td>
-                                                        <td className="p-5">
-                                                            <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button onClick={() => printReceipt(h)} className="p-2.5 bg-brand/10 text-brand rounded-xl hover:bg-brand hover:text-white"><Icon name="printer" className="w-4 h-4" /></button>
-                                                                <button onClick={() => deleteTransaction(i)} className="p-2.5 bg-danger/10 text-danger rounded-xl hover:bg-danger hover:text-white"><Icon name="trash-2" className="w-4 h-4" /></button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -486,34 +429,36 @@
 
                     {isSettingsOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-                            <div className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow animate-in zoom-in duration-300">
+                            <div className="bg-surface w-full max-w-md rounded-[40px] p-10 card-shadow">
                                 <div className="flex justify-between items-center mb-10">
                                     <h3 className="text-2xl font-black">الإعدادات والبيانات</h3>
                                     <button onClick={() => setIsSettingsOpen(false)} className="p-2 bg-background rounded-xl"><Icon name="x" /></button>
                                 </div>
-                                <div className="space-y-6">
-                                    <div className="p-6 bg-background rounded-[30px] space-y-4">
-                                        <p className="text-sm font-black mb-4">النسخ الاحتياطي</p>
-                                        <button onClick={exportData} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-brand/20">
-                                            <Icon name="download" className="w-5 h-5" /> تصدير كافة البيانات (JSON)
-                                        </button>
-                                        <label className="w-full bg-surface border-2 border-border text-text py-4 rounded-2xl font-bold flex items-center justify-center gap-3 cursor-pointer hover:bg-border/20">
-                                            <Icon name="upload" className="w-5 h-5" /> استيراد نسخة احتياطية
-                                            <input type="file" className="hidden" onChange={importData} accept=".json" />
-                                        </label>
-                                    </div>
-                                    <div className="p-6 bg-danger/5 rounded-[30px] border border-danger/10">
-                                        <p className="text-xs font-bold text-danger mb-2">تنبيه أمني</p>
-                                        <p className="text-[10px] text-text-dim leading-relaxed">يتم حفظ كافة العمليات تلقائياً على خوادم جوجل السحابية. تأكد من تصدير نسخة شهرياً لضمان أمان بياناتك.</p>
-                                    </div>
+                                <div className="space-y-4">
+                                    <button onClick={() => {
+                                        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
+                                        const dl = document.createElement('a'); dl.href = data; dl.download = "backup.json"; dl.click();
+                                    }} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3"><Icon name="download" /> تصدير البيانات</button>
+                                    <label className="w-full bg-background border-2 border-border py-4 rounded-2xl font-bold flex items-center justify-center gap-3 cursor-pointer">
+                                        <Icon name="upload" /> استيراد البيانات
+                                        <input type="file" className="hidden" onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            const reader = new FileReader();
+                                            reader.onload = async (ev) => {
+                                                const data = JSON.parse(ev.target.result);
+                                                for (const item of data) await db.collection('clients').doc(item.id || db.collection('clients').doc().id).set(item, { merge: true });
+                                                showToast('تم الاستيراد');
+                                            };
+                                            reader.readAsText(file);
+                                        }} />
+                                    </label>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {toast && (
-                        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-10 py-5 rounded-[25px] shadow-2xl text-white font-black z-[100] flex items-center gap-4 animate-in slide-in-from-bottom-10 ${toast.type === 'success' ? 'bg-success shadow-success/30' : 'bg-danger shadow-danger/30'}`}>
-                            <Icon name={toast.type === 'success' ? 'check-circle' : 'alert-circle'} className="w-6 h-6" />
+                        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-10 py-5 rounded-[25px] shadow-2xl text-white font-black z-[100] flex items-center gap-4 ${toast.type === 'success' ? 'bg-success' : 'bg-danger'}`}>
                             {toast.msg}
                         </div>
                     )}
