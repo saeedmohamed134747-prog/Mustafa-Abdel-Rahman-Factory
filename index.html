@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الديون - نسخة الإغلاق التلقائي الذكي</title>
+    <title>نظام إدارة الديون - نسخة الريل تايم الاحترافية</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,14 +62,21 @@
         .dark .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin-slow { animation: spin 3s linear infinite; }
+        /* Pulse Animation for Live Connection */
+        .pulse-live {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
     </style>
 </head>
 <body>
@@ -119,7 +126,10 @@
             const [clients, setClients] = useState([]);
             const [searchTerm, setSearchTerm] = useState('');
             const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('theme') === 'dark');
-            const [selectedClient, setSelectedClient] = useState(null);
+            
+            // تتبع المعرف لضمان تحديث بيانات العميل المختار لحظياً
+            const [selectedClientId, setSelectedClientId] = useState(null);
+            
             const [isHistoryOpen, setIsHistoryOpen] = useState(false);
             const [isPayModalOpen, setIsPayModalOpen] = useState(false);
             const [isAddDebtModalOpen, setIsAddDebtModalOpen] = useState(false);
@@ -141,6 +151,11 @@
                 info: 'تواصل: 0123456789'
             });
 
+            // الحصول على بيانات العميل المختار لحظياً من القائمة الرئيسية (Real-time Sync)
+            const selectedClient = useMemo(() => 
+                clients.find(c => c.id === selectedClientId), 
+            [clients, selectedClientId]);
+
             useEffect(() => {
                 if (isDarkMode) document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
@@ -159,7 +174,7 @@
                                 setUser({ uid: u.uid, displayName: u.displayName || u.email, email: u.email, role: u.email === defaultAdmin ? 'admin' : 'user' });
                                 setIsAuthorized(true);
                             } else {
-                                setAuthError('عذراً، هذا الحساب غير مصرح له بالدخول. يرجى مراجعة المسؤول.');
+                                setAuthError('عذراً، هذا الحساب غير مصرح له بالدخول.');
                                 auth.signOut();
                             }
                         } catch (e) { console.error(e); }
@@ -173,15 +188,29 @@
                 return unsubscribe;
             }, []);
 
+            // الربط اللحظي (Real-time Listeners) لجميع البيانات
             useEffect(() => {
                 if (!isAuthorized) return;
-                const unsubClients = db.collection('clients').onSnapshot(snap => setClients(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
-                const unsubConfig = db.collection('config').doc('main').onSnapshot(doc => doc.exists && setConfig(doc.data()));
-                const unsubWhitelist = db.collection('settings').doc('whitelist').onSnapshot(doc => doc.exists && setWhitelist(doc.data().emails || []));
+                
+                const unsubClients = db.collection('clients').orderBy('name').onSnapshot(snap => {
+                    setClients(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                });
+                
+                const unsubConfig = db.collection('config').doc('main').onSnapshot(doc => {
+                    if (doc.exists) setConfig(doc.data());
+                });
+                
+                const unsubWhitelist = db.collection('settings').doc('whitelist').onSnapshot(doc => {
+                    if (doc.exists) setWhitelist(doc.data().emails || []);
+                });
+
                 let unsubUsers = () => {};
                 if (user?.role === 'admin') {
-                    unsubUsers = db.collection('users').onSnapshot(snap => setAppUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+                    unsubUsers = db.collection('users').onSnapshot(snap => {
+                        setAppUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                    });
                 }
+
                 return () => { unsubClients(); unsubConfig(); unsubWhitelist(); unsubUsers(); };
             }, [isAuthorized, user?.role]);
 
@@ -191,6 +220,7 @@
             };
 
             const handleGoogleLogin = () => auth.signInWithPopup(googleProvider);
+            
             const handleCustomLogin = async (e) => {
                 e.preventDefault();
                 if (username === 'احمد عبد الرحمن' && password === 'Shousha30') {
@@ -213,49 +243,65 @@
                 const name = e.target.name.value;
                 const total = parseFloat(e.target.total.value);
                 const initialTransaction = { amount: total, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type: 'debt' };
-                await db.collection('clients').add({ name, total, paid: 0, history: [initialTransaction], createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: user.displayName });
-                
-                // إغلاق تلقائي فوري
-                setIsAddModalOpen(false); 
+                await db.collection('clients').add({ 
+                    name, 
+                    total, 
+                    paid: 0, 
+                    history: [initialTransaction], 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), 
+                    createdBy: user.displayName 
+                });
+                setIsAddModalOpen(false);
                 showToast('تمت إضافة العميل بنجاح');
             };
 
             const handleTransaction = async (type) => {
                 const val = parseFloat(amount);
-                if (!val || !selectedClient) return;
-                const updates = type === 'payment' ? { paid: (selectedClient.paid || 0) + val } : { total: (selectedClient.total || 0) + val };
+                if (!val || !selectedClientId) return;
+                
+                const clientRef = db.collection('clients').doc(selectedClientId);
                 const newTrans = { amount: val, user: user.displayName, date: new Date().toLocaleString('ar-EG'), type };
-                await db.collection('clients').doc(selectedClient.id).update({ ...updates, history: [newTrans, ...(selectedClient.history || [])] });
+
+                // استخدام increment لضمان التزامن اللحظي الدقيق بين الأجهزة
+                const updates = type === 'payment' 
+                    ? { paid: firebase.firestore.FieldValue.increment(val) }
+                    : { total: firebase.firestore.FieldValue.increment(val) };
+
+                await clientRef.update({
+                    ...updates,
+                    history: firebase.firestore.FieldValue.arrayUnion(newTrans)
+                });
                 
-                // إغلاق تلقائي فوري للنوافذ المنبثقة
-                setIsPayModalOpen(false); 
-                setIsAddDebtModalOpen(false); 
+                setIsPayModalOpen(false);
+                setIsAddDebtModalOpen(false);
                 setAmount('');
-                
-                if (type === 'payment') {
-                    showToast('تم تسجيل التحصيل بنجاح', 'success');
-                } else {
-                    showToast('تم تسجيل الدين بنجاح', 'success');
-                }
+                showToast(type === 'payment' ? 'تم تسجيل التحصيل بنجاح' : 'تم تسجيل الدين بنجاح');
             };
 
             const deleteTransaction = async (index) => {
                 if (!confirm('حذف هذه المعاملة؟ سيتم تعديل الرصيد تلقائياً.')) return;
                 const t = selectedClient.history[index];
-                const newH = [...selectedClient.history]; newH.splice(index, 1);
-                const updates = t.type === 'payment' ? { paid: (selectedClient.paid || 0) - t.amount } : { total: (selectedClient.total || 0) - t.amount };
-                await db.collection('clients').doc(selectedClient.id).update({ ...updates, history: newH });
-                setSelectedClient(prev => ({ ...prev, ...updates, history: newH }));
-                showToast('تم حذف المعاملة');
+                const newH = [...selectedClient.history]; 
+                newH.splice(index, 1);
+                
+                const updates = t.type === 'payment' 
+                    ? { paid: firebase.firestore.FieldValue.increment(-t.amount) }
+                    : { total: firebase.firestore.FieldValue.increment(-t.amount) };
+
+                await db.collection('clients').doc(selectedClientId).update({
+                    ...updates,
+                    history: newH
+                });
+                showToast('تم حذف المعاملة وتحديث الأرصدة');
             };
 
             const calculateRunningBalance = (history) => {
                 let current = 0;
-                return [...(history || [])].reverse().map(h => {
+                return [...(history || [])].map(h => {
                     if (h.type === 'payment') current -= h.amount;
                     else current += h.amount;
                     return { ...h, balance: current };
-                }).reverse();
+                }).reverse(); // العرض من الأحدث للأقدم
             };
 
             const printReceipt = (h) => {
@@ -292,7 +338,7 @@
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-surface p-10 rounded-[40px] card-shadow w-full max-w-md text-center border border-border">
                         <img src={config.logo} className="w-24 h-24 mx-auto mb-8 rounded-3xl shadow-lg object-cover" />
                         <h1 className="text-3xl font-black mb-2">{config.name}</h1>
-                        <p className="text-text-dim mb-8 text-sm">نظام الإدارة والتحصيل</p>
+                        <p className="text-text-dim mb-8 text-sm">نظام الإدارة والتحصيل اللحظي</p>
                         {authError && <div className="bg-danger/10 text-danger p-3 rounded-xl mb-6 text-xs font-bold leading-relaxed">{authError}</div>}
                         <div className="flex bg-background p-1 rounded-xl mb-6">
                             <button onClick={() => setLoginMode('google')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${loginMode === 'google' ? 'bg-brand text-white shadow-md' : 'text-text-dim'}`}>جوجل</button>
@@ -328,7 +374,13 @@
                     <header className="bg-surface border-b border-border sticky top-0 z-40 px-6 py-4 flex justify-between items-center backdrop-blur-md bg-surface/80">
                         <div className="flex items-center gap-3">
                             <img src={config.logo} className="w-10 h-10 rounded-xl shadow-sm" />
-                            <h1 className="font-black text-xl tracking-tight">{config.name}</h1>
+                            <div className="flex flex-col">
+                                <h1 className="font-black text-xl tracking-tight leading-none">{config.name}</h1>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <span className="pulse-live"></span>
+                                    <span className="text-[10px] font-bold text-success">متصل الآن</span>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 hover:bg-background rounded-2xl transition-colors">
@@ -347,14 +399,14 @@
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <motion.div whileHover={{ y: -5 }} className="bg-brand p-8 rounded-[35px] shadow-2xl shadow-brand/20 text-white relative overflow-hidden">
                                 <div className="relative z-10">
-                                    <p className="opacity-80 text-sm font-bold mb-2">إجمالي الديون المستحقة</p>
+                                    <p className="opacity-80 text-sm font-bold mb-2 text-white/80">إجمالي الديون المستحقة</p>
                                     <h2 className="text-4xl font-black">{totalDebt.toLocaleString()} ج.م</h2>
                                 </div>
                                 <Icon name="trending-up" className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rotate-12" />
                             </motion.div>
                             <motion.div whileHover={{ y: -5 }} className="bg-success p-8 rounded-[35px] shadow-2xl shadow-success/20 text-white relative overflow-hidden">
                                 <div className="relative z-10">
-                                    <p className="opacity-80 text-sm font-bold mb-2">إجمالي العربون (رصيد العملاء)</p>
+                                    <p className="opacity-80 text-sm font-bold mb-2 text-white/80">إجمالي العربون (رصيد العملاء)</p>
                                     <h2 className="text-4xl font-black">{totalArboun.toLocaleString()} ج.م</h2>
                                 </div>
                                 <Icon name="wallet" className="absolute -bottom-4 -left-4 w-32 h-32 opacity-10 rotate-12" />
@@ -383,7 +435,7 @@
                                         <motion.div layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} key={c.id} className="bg-surface p-7 rounded-[35px] card-shadow border border-border hover:border-brand/50 transition-all group">
                                             <div className="flex justify-between items-start mb-6">
                                                 <h3 className="text-xl font-black group-hover:text-brand transition-colors">{c.name}</h3>
-                                                <button onClick={() => { setSelectedClient(c); setIsHistoryOpen(true); }} className="p-3 bg-background rounded-2xl text-text-dim hover:text-brand hover:bg-brand/10 transition-all">
+                                                <button onClick={() => { setSelectedClientId(c.id); setIsHistoryOpen(true); }} className="p-3 bg-background rounded-2xl text-text-dim hover:text-brand hover:bg-brand/10 transition-all">
                                                     <Icon name="history" />
                                                 </button>
                                             </div>
@@ -396,8 +448,8 @@
                                                 </div>
                                             </div>
                                             <div className="flex gap-3">
-                                                <button onClick={() => { setSelectedClient(c); setIsPayModalOpen(true); }} className="flex-1 bg-success text-white py-4 rounded-2xl font-bold shadow-lg shadow-success/20 hover:brightness-110 active:scale-95 transition-all">تحصيل</button>
-                                                <button onClick={() => { setSelectedClient(c); setIsAddDebtModalOpen(true); }} className="flex-1 bg-background border-2 border-border py-4 rounded-2xl font-bold hover:bg-border/20 active:scale-95 transition-all">دين جديد</button>
+                                                <button onClick={() => { setSelectedClientId(c.id); setIsPayModalOpen(true); }} className="flex-1 bg-success text-white py-4 rounded-2xl font-bold shadow-lg shadow-success/20 hover:brightness-110 active:scale-95 transition-all">تحصيل</button>
+                                                <button onClick={() => { setSelectedClientId(c.id); setIsAddDebtModalOpen(true); }} className="flex-1 bg-background border-2 border-border py-4 rounded-2xl font-bold hover:bg-border/20 active:scale-95 transition-all">دين جديد</button>
                                             </div>
                                         </motion.div>
                                     );
@@ -446,12 +498,12 @@
                                             <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center"><Icon name="user" className="w-6 h-6" /></div>
                                             <div>
                                                 <h3 className="text-xl font-black">{selectedClient.name}</h3>
-                                                <p className="text-xs text-text-dim font-bold">سجل الحساب المالي الكامل</p>
+                                                <p className="text-xs text-text-dim font-bold">سجل الحساب المالي المحدث لحظياً</p>
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
                                             {user.role === 'admin' && (
-                                                <button onClick={async () => { if(confirm('حذف العميل نهائياً؟')) { await db.collection('clients').doc(selectedClient.id).delete(); setIsHistoryOpen(false); showToast('تم الحذف'); } }} className="p-3 bg-danger/10 text-danger rounded-2xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" /></button>
+                                                <button onClick={async () => { if(confirm('حذف العميل نهائياً؟')) { await db.collection('clients').doc(selectedClientId).delete(); setIsHistoryOpen(false); showToast('تم الحذف'); } }} className="p-3 bg-danger/10 text-danger rounded-2xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" /></button>
                                             )}
                                             <button onClick={() => setIsHistoryOpen(false)} className="p-3 bg-background rounded-2xl hover:bg-border transition-all"><Icon name="x" className="w-6 h-6" /></button>
                                         </div>
@@ -504,7 +556,7 @@
                                                             <td className="p-5">
                                                                 <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <button onClick={() => printReceipt(h)} className="p-2.5 bg-brand/10 text-brand rounded-xl hover:bg-brand hover:text-white transition-all"><Icon name="printer" className="w-4 h-4" /></button>
-                                                                    <button onClick={() => deleteTransaction(i)} className="p-2.5 bg-danger/10 text-danger rounded-xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                                                    <button onClick={() => deleteTransaction(selectedClient.history.length - 1 - i)} className="p-2.5 bg-danger/10 text-danger rounded-xl hover:bg-danger hover:text-white transition-all"><Icon name="trash-2" className="w-4 h-4" /></button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -540,7 +592,7 @@
                                                 e.preventDefault(); 
                                                 const formData = new FormData(e.currentTarget); 
                                                 await db.collection('config').doc('main').set({ name: formData.get('name'), logo: formData.get('logo'), info: formData.get('info') }); 
-                                                setIsSettingsOpen(false); // إغلاق تلقائي
+                                                setIsSettingsOpen(false); 
                                                 showToast('تم الحفظ'); 
                                             }} className="space-y-4">
                                                 <input name="name" defaultValue={config.name} placeholder="اسم المصنع" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" />
@@ -554,7 +606,7 @@
                                                 <button onClick={() => {
                                                     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients));
                                                     const dl = document.createElement('a'); dl.href = dataStr; dl.download = "backup.json"; dl.click(); 
-                                                    setIsSettingsOpen(false); // إغلاق تلقائي
+                                                    setIsSettingsOpen(false);
                                                     showToast('تم التصدير');
                                                 }} className="w-full bg-brand text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg">
                                                     <Icon name="download" /> تصدير نسخة احتياطية
@@ -567,7 +619,7 @@
                                                             try {
                                                                 const data = JSON.parse(ev.target.result);
                                                                 for (const item of data) await db.collection('clients').doc(item.id || db.collection('clients').doc().id).set(item, { merge: true });
-                                                                setIsSettingsOpen(false); // إغلاق تلقائي
+                                                                setIsSettingsOpen(false);
                                                                 showToast('تم استيراد البيانات بنجاح');
                                                             } catch (e) { showToast('خطأ في الملف', 'error'); }
                                                         };
@@ -583,7 +635,7 @@
                                                     const formData = new FormData(e.currentTarget); 
                                                     await db.collection('users').add({ username: formData.get('u'), password: formData.get('p'), role: 'user' }); 
                                                     e.currentTarget.reset(); 
-                                                    setIsSettingsOpen(false); // إغلاق تلقائي
+                                                    setIsSettingsOpen(false);
                                                     showToast('تم إضافة المستخدم بنجاح'); 
                                                 }} className="space-y-2">
                                                     <input name="u" placeholder="الاسم" className="w-full bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" required />
@@ -611,7 +663,7 @@
                                                     const newWhitelist = [...whitelist, email];
                                                     await db.collection('settings').doc('whitelist').set({ emails: newWhitelist });
                                                     e.currentTarget.reset();
-                                                    setIsSettingsOpen(false); // إغلاق تلقائي
+                                                    setIsSettingsOpen(false);
                                                     showToast('تمت إضافة البريد المصرح له');
                                                 }} className="flex gap-2">
                                                     <input name="email" type="email" placeholder="example@gmail.com" className="flex-1 bg-background p-3 rounded-xl text-sm outline-none border-2 border-transparent focus:border-brand" required />
