@@ -90,7 +90,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-
+    
     // Default Deny
     match /{document=**} {
       allow read, write: if false;
