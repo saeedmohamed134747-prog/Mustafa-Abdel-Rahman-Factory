@@ -25,8 +25,6 @@
     <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Firebase SDK (Modular) -->
     <script type="module">
@@ -47,6 +45,7 @@
         const authInstance = getAuth(app);
         const googleProviderInstance = new GoogleAuthProvider();
 
+        // Expose to window for the Babel script
         window.fb = {
             db: firestore,
             auth: authInstance,
@@ -131,6 +130,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
         const { motion, AnimatePresence } = window.Motion || window.FramerMotion || { motion: (p) => <div {...p} />, AnimatePresence: (p) => <>{p.children}</> };
 
+        // --- Firebase Shim (Modular to Compat) ---
         const { db: firestore, auth: authInstance, googleProvider: googleProviderInstance, collection, doc, getDoc, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, increment, arrayUnion, setDoc, signOut, signInWithPopup, onAuthStateChanged } = window.fb;
 
         const wrapDocSnap = (snap) => {
@@ -204,6 +204,7 @@
             }
         };
 
+        // --- Icons Component ---
         const Icon = ({ name, className }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
             return <i data-lucide={name} className={className}></i>;
@@ -244,6 +245,7 @@
                 localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             }, [isDarkMode]);
 
+            // Auth Listener
             useEffect(() => {
                 const unsubscribe = auth.onAuthStateChanged(async (u) => {
                     if (u) {
@@ -260,11 +262,12 @@
                                 auth.signOut();
                             }
                         } catch (error) { 
+                            console.warn('Whitelist check failed:', error);
                             if (u.email === "saeedmohamed131846@gmail.com") {
                                 setUser({ uid: u.uid, displayName: u.displayName || u.email, email: u.email, role: 'admin' });
                                 setIsAuthorized(true);
                             } else {
-                                setAuthError('فشل التحقق من الصلاحيات.');
+                                setAuthError('فشل التحقق من الصلاحيات. حاول مرة أخرى.');
                             }
                         }
                     } else {
@@ -275,7 +278,7 @@
                         } else {
                             setUser(null);
                             setIsAuthorized(false);
-                            setClients([]);
+                            setClients([]); // Clear data on logout
                         }
                     }
                     setLoading(false);
@@ -283,8 +286,19 @@
                 return () => unsubscribe();
             }, []);
 
+            // Real-time Data Listeners
             useEffect(() => {
                 if (!isAuthorized) return;
+
+                // Connection Test
+                db.collection('test').doc('connection').get()
+                    .then(() => console.log('Firestore connected successfully to:', 'ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5'))
+                    .catch(err => {
+                        if (err.message.includes('not-found') || err.message.includes('default')) {
+                             console.error('CRITICAL: Still hitting (default) database. SDK initialization failed.');
+                        }
+                        console.error('Firestore connection error:', err);
+                    });
 
                 const unsubClients = db.collection('clients').orderBy('name').onSnapshot(snap => {
                     setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -339,6 +353,7 @@
                     type 
                 };
 
+                // Atomic updates using increment
                 const updates = type === 'payment' 
                     ? { paid: firebase.firestore.FieldValue.increment(val) }
                     : { total: firebase.firestore.FieldValue.increment(val) };
@@ -580,6 +595,7 @@
                                                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                                                     pagebreak: { mode: ['css', 'legacy'] }
                                                 };
+                                                // Trigger print with a small delay to ensure rendering
                                                 setTimeout(() => {
                                                     html2pdf().from(element).set(opt).save();
                                                 }, 500);
@@ -621,6 +637,7 @@
                             </div>
                         )}
 
+                        {/* Hidden Invoice Template for PDF */}
                         <div style={{ position: 'absolute', top: '-20000px', left: 0, width: '210mm', zIndex: -1000 }}>
                             <div id="invoice-print-area" style={{ 
                                 width: '210mm', 
