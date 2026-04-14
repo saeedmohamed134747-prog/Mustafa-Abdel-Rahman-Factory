@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مصنع مصطفى عبد الرحمن - إدارة الديون</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Tajawal','sans-serif']},colors:{brand:'#3b82f6','brand-soft':'rgba(59, 130, 246, 0.1)',success:'#22c55e','success-soft':'rgba(34, 197, 94, 0.1)',danger:'#ef4444','danger-soft':'rgba(239, 68, 68, 0.1)',warning:'#f59e0b','warning-soft':'rgba(245, 158, 11, 0.1)',background:'var(--bg-background)',surface:'var(--bg-surface)',border:'var(--border-color)',text:'var(--text-main)','text-dim':'var(--text-dim)',overlay:'rgba(0,0,0,0.5)'}}}}
+</script>
+<style>
+:root{--bg-background:#f8fafc;--bg-surface:#ffffff;--border-color:#e2e8f0;--text-main:#0f172a;--text-dim:#64748b}
+.dark{--bg-background:#0f172a;--bg-surface:#1e293b;--border-color:#334155;--text-main:#f8fafc;--text-dim:#94a3b8}
+body{background-color:var(--bg-background);color:var(--text-main);transition:background-color .3s,color .3s}
+.card-shadow{box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06)}
+.dark .card-shadow{box-shadow:0 4px 6px -1px rgba(0,0,0,.3),0 2px 4px -1px rgba(0,0,0,.2)}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:0 0}::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:10px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes scaleIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}@keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+.animate-fade{animation:fadeIn .2s ease-out forwards}.animate-scale{animation:scaleIn .2s ease-out forwards}.animate-slide{animation:slideUp .3s ease-out forwards}
+@media print{
+body *{visibility:hidden!important} #print-only-section,#print-only-section *{visibility:visible!important}
+body{background-color:#fff!important;margin:0!important;padding:0!important}
+#print-only-section{position:absolute!important;left:0!important;top:0!important;width:100%!important;display:block!important;font-family:Tajawal,sans-serif!important;direction:rtl!important;padding:40px!important;background:#fff!important;color:#0f172a!important;box-shadow:none!important;margin:0!important}
+.no-print{display:none!important}
+#print-only-section table{width:100%!important;border-collapse:collapse!important;margin-top:30px!important;page-break-inside:auto!important;border:1px solid #e2e8f0!important}
+#print-only-section th{background-color:#f8fafc!important;color:#334155!important;font-weight:800!important;border:1px solid #e2e8f0!important;padding:16px!important;text-align:center!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+#print-only-section td{border:1px solid #e2e8f0!important;padding:16px!important;text-align:center!important;font-weight:700!important}
+#print-only-section tr{page-break-inside:avoid!important} #print-only-section thead{display:table-header-group!important}
+}
+</style>
+</head>
+<body class="min-h-screen pb-20">
+
+<div id="print-preview-modal" class="fixed inset-0 z-[300] hidden bg-[#0f172a] overflow-y-auto">
+    <div class="sticky top-0 z-10 bg-[#0f172a] border-b border-slate-800 p-4 flex flex-col sm:flex-row justify-between items-center shadow-lg no-print gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-brand/20 text-brand flex items-center justify-center"><i class="ph-bold ph-printer text-2xl"></i></div>
+            <div><h2 class="text-white font-bold text-xl">معاينة الطباعة</h2><p class="text-slate-400 text-sm">تأكد من إعدادات الطباعة قبل المتابعة</p></div>
+        </div>
+        <div class="flex flex-wrap gap-3 justify-center">
+            <button onclick="closePrintPreview()" class="px-6 py-2.5 rounded-xl border border-slate-700 text-white hover:bg-slate-800 transition-colors font-bold">إغلاق المعاينة</button>
+            <button onclick="downloadAsImage()" id="download-img-btn" class="px-6 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]"><i class="ph-bold ph-image"></i> تحميل كصورة</button>
+            <button onclick="executePrint()" class="px-6 py-2.5 rounded-xl bg-[#38bdf8] text-white hover:bg-[#0284c7] transition-all font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.5)]"><i class="ph-bold ph-printer"></i> طباعة الآن</button>
+        </div>
+    </div>
+    <div class="max-w-[210mm] mx-auto bg-white min-h-[297mm] my-8 shadow-2xl relative" id="print-only-section">
+        <div class="p-10">
+            <div class="flex justify-between items-start mb-8">
+                <div><h1 class="text-3xl font-black text-slate-800 mb-2">كشف حساب عميل</h1><p class="text-slate-500 font-medium">تاريخ الإصدار: <span id="print-layout-date"></span></p></div>
+                <div class="text-left flex items-center gap-4">
+                    <div><h2 id="print-company-name" class="text-2xl font-black text-[#38bdf8] mb-1"></h2><p id="print-company-info" class="text-slate-600 font-bold text-sm"></p></div>
+                    <img id="print-company-logo" src="" crossorigin="anonymous" class="w-20 h-20 rounded-full object-cover border-2 border-slate-100" />
+                </div>
+            </div>
+            <div class="h-1 w-full bg-[#38bdf8] mb-8"></div>
+            <div class="flex justify-between items-end mb-8">
+                <div class="flex gap-4">
+                    <div class="border border-slate-200 rounded-3xl p-4 text-center min-w-[120px] bg-slate-50"><p class="text-slate-500 text-xs font-bold mb-2">الرصيد المتبقي</p><p id="print-summary-balance" class="text-xl font-black text-slate-800"></p></div>
+                    <div class="border border-slate-200 rounded-3xl p-4 text-center min-w-[120px]"><p class="text-slate-500 text-xs font-bold mb-2">إجمالي التحصيل</p><p id="print-summary-paid" class="text-xl font-black text-[#22c55e]"></p></div>
+                    <div class="border border-slate-200 rounded-3xl p-4 text-center min-w-[120px]"><p class="text-slate-500 text-xs font-bold mb-2">إجمالي المديونية</p><p id="print-summary-total" class="text-xl font-black text-[#3b82f6]"></p></div>
+                </div>
+                <div class="text-left"><p class="text-slate-400 font-bold text-sm mb-1">بيانات العميل</p><h3 id="print-layout-client-name" class="text-2xl font-black text-slate-800 mb-1"></h3><p class="text-slate-500 text-sm font-bold">رقم الحساب: <span id="print-client-id" class="uppercase"></span></p></div>
+            </div>
+            <table class="w-full border-collapse border border-slate-200 mt-8 text-sm">
+                <thead><tr class="bg-slate-50 text-slate-600"><th class="border border-slate-200 p-4 text-center font-black w-1/4">التاريخ</th><th class="border border-slate-200 p-4 text-center font-black w-1/4">البيان</th><th class="border border-slate-200 p-4 text-center font-black w-1/6">مدين (+)</th><th class="border border-slate-200 p-4 text-center font-black w-1/6">دائن (-)</th><th class="border border-slate-200 p-4 text-center font-black w-1/6">الرصيد</th></tr></thead>
+                <tbody id="print-layout-tbody" class="text-slate-800 font-bold"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2"></div>
+
+<div id="login-screen" class="min-h-screen flex items-center justify-center p-4 bg-background hidden">
+    <div class="bg-surface p-8 rounded-[40px] card-shadow w-full max-w-md text-center border border-border">
+        <img id="login-logo" src="" class="w-20 h-20 mx-auto mb-6 rounded-2xl object-cover" />
+        <h1 id="login-title" class="text-2xl font-black mb-2"></h1>
+        <p class="text-text-dim mb-8 text-sm">نظام إدارة الديون والتحصيل</p>
+        <div id="auth-error" class="bg-danger-soft text-danger p-4 rounded-2xl mb-6 text-xs font-bold border border-danger/20 hidden"></div>
+        <div class="flex bg-background p-1.5 rounded-2xl mb-8 border border-border">
+            <button onclick="setLoginMode('google')" id="tab-google" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all bg-brand text-white shadow-lg">جوجل</button>
+            <button onclick="setLoginMode('custom')" id="tab-custom" class="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all text-text-dim hover:bg-surface">يدوي</button>
+        </div>
+        <div id="google-login-form"><button onclick="handleLogin('google')" class="w-full bg-brand text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand/20"><i class="ph-bold ph-google-logo text-lg"></i> دخول بجوجل</button></div>
+        <form id="custom-login-form" onsubmit="handleLogin('custom', event)" class="space-y-4 hidden">
+            <input id="login-username" placeholder="اسم المستخدم" class="w-full bg-background p-4 rounded-xl outline-none border border-border focus:border-brand text-sm transition-all" required />
+            <input id="login-password" type="password" placeholder="كلمة المرور" class="w-full bg-background p-4 rounded-xl outline-none border border-border focus:border-brand text-sm transition-all" required />
+            <button type="submit" class="w-full bg-brand text-white py-4 rounded-xl font-bold shadow-xl shadow-brand/20 hover:bg-brand/90 transition-all">دخول</button>
+        </form>
+    </div>
+</div>
+
+<div id="main-app" class="hidden">
+    <header class="bg-surface border-b border-border sticky top-0 z-40 px-6 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2"><img id="header-logo" src="" class="w-8 h-8 rounded-lg object-cover" /><h1 id="header-title" class="text-lg font-black hidden sm:block"></h1></div>
+            <div class="flex items-center gap-1">
+                <button onclick="toggleTheme()" class="p-2 hover:bg-brand-soft rounded-xl transition-colors text-text"><i id="theme-icon" class="ph-bold ph-moon text-xl"></i></button>
+                <button onclick="openModal('settings-modal')" class="p-2 hover:bg-brand-soft rounded-xl transition-colors text-text"><i class="ph-bold ph-gear text-xl"></i></button>
+                <button onclick="handleLogout()" class="p-2 text-danger hover:bg-danger-soft rounded-xl transition-colors"><i class="ph-bold ph-sign-out text-xl"></i></button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-surface p-6 rounded-3xl card-shadow border border-border group hover:border-brand/40 transition-all"><div class="flex items-center gap-3 mb-2"><div class="p-2 rounded-xl bg-brand-soft text-brand"><i class="ph-bold ph-trend-up text-xl"></i></div><p class="text-text-dim text-xs font-bold">إجمالي الديون</p></div><h2 class="text-2xl font-black text-brand"><span id="stat-debt">0</span> <span class="text-xs font-medium">ج.م</span></h2></div>
+            <div class="bg-surface p-6 rounded-3xl card-shadow border border-border group hover:border-success/40 transition-all"><div class="flex items-center gap-3 mb-2"><div class="p-2 rounded-xl bg-success-soft text-success"><i class="ph-bold ph-wallet text-xl"></i></div><p class="text-text-dim text-xs font-bold">إجمالي التحصيل</p></div><h2 class="text-2xl font-black text-success"><span id="stat-paid">0</span> <span class="text-xs font-medium">ج.م</span></h2></div>
+            <div class="bg-surface p-6 rounded-3xl card-shadow border border-border group hover:border-warning/40 transition-all"><div class="flex items-center gap-3 mb-2"><div class="p-2 rounded-xl bg-warning-soft text-warning"><i class="ph-bold ph-users text-xl"></i></div><p class="text-text-dim text-xs font-bold">عدد العملاء</p></div><h2 class="text-2xl font-black text-text" id="stat-clients">0</h2></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 items-center justify-between bg-surface p-4 rounded-2xl border border-border shadow-sm">
+            <div class="relative w-full sm:max-w-xs"><i class="ph-bold ph-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-text-dim"></i><input id="search-input" oninput="renderClients()" placeholder="ابحث عن عميل..." class="w-full bg-background rounded-xl py-2.5 pr-10 pl-3 text-sm outline-none text-text border border-border focus:border-brand transition-all placeholder:text-text-dim/60" /></div>
+            <button onclick="openModal('add-client-modal')" class="w-full sm:w-auto bg-brand text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all"><i class="ph-bold ph-plus"></i> إضافة عميل</button>
+        </div>
+        <div id="clients-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </main>
+</div>
+
+<!-- Modals -->
+<div id="add-client-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-overlay backdrop-blur-sm animate-fade" onclick="closeModal('add-client-modal')"></div><div class="relative bg-surface w-full max-w-sm rounded-3xl p-6 card-shadow animate-scale"><h3 class="text-xl font-black mb-4 text-text">إضافة عميل</h3><form onsubmit="addClient(event)" class="space-y-4"><input id="new-client-name" placeholder="الاسم" required class="w-full bg-background text-text p-3 rounded-xl outline-none border border-border focus:border-brand text-sm" /><input id="new-client-total" type="number" placeholder="المبلغ" required class="w-full bg-background text-text p-3 rounded-xl outline-none border border-border focus:border-brand text-sm" /><button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm">حفظ</button></form></div></div>
+<div id="transaction-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-overlay backdrop-blur-sm animate-fade" onclick="closeModal('transaction-modal')"></div><div class="relative bg-surface w-full max-w-sm rounded-3xl p-6 card-shadow text-center animate-scale"><h3 id="tx-title" class="text-xl font-black mb-1 text-text"></h3><p id="tx-client-name" class="text-text-dim text-xs mb-4"></p><form onsubmit="submitTransaction(event)" class="space-y-3 mb-4"><input id="tx-amount" type="number" required min="1" class="w-full bg-background text-text p-4 rounded-2xl text-2xl font-black text-center outline-none border border-border focus:border-brand" placeholder="0.00" /><textarea id="tx-notes" class="w-full bg-background text-text p-3 rounded-xl text-sm outline-none border border-border focus:border-brand resize-none h-20" placeholder="ملاحظات إضافية (اختياري)..."></textarea><button id="tx-submit-btn" type="submit" class="w-full py-3 rounded-xl font-bold text-white">تأكيد</button></form></div></div>
+<div id="history-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-overlay backdrop-blur-sm animate-fade" onclick="closeModal('history-modal')"></div><div class="relative bg-surface w-full max-w-lg rounded-3xl max-h-[90vh] flex flex-col overflow-hidden card-shadow animate-slide"><div class="p-5 border-b border-border flex justify-between items-center no-print"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center"><i class="ph-bold ph-user text-xl"></i></div><div><h3 id="hist-client-name" class="font-black text-text"></h3><p class="text-[10px] text-text-dim font-bold">سجل الحساب المالي المحدث لحظياً</p></div></div><button onclick="closeModal('history-modal')" class="p-2 bg-background rounded-lg text-text-dim hover:text-text"><i class="ph-bold ph-x"></i></button></div><div class="flex-1 overflow-y-auto p-5 space-y-6 bg-surface text-text"><div class="space-y-4"><div class="flex items-center gap-3 mb-6 no-print"><div class="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shadow-lg shadow-brand/20"><i class="ph-bold ph-clock-counter-clockwise text-xl"></i></div><div><h4 class="text-lg font-black text-text">تفاصيل المعاملات</h4><p class="text-[10px] text-text-dim font-bold">سجل الحركات المالية المسجلة</p></div></div><div class="overflow-hidden rounded-2xl border border-border"><table class="w-full text-right text-sm"><thead class="bg-background text-text-dim font-black border-b border-border"><tr><th class="p-4">التاريخ</th><th class="p-4">نوع المعاملة</th><th class="p-4">المبلغ</th><th class="p-4 bg-brand-soft">الرصيد</th><th class="p-4 no-print">إجراء</th></tr></thead><tbody id="history-table-body" class="divide-y divide-border"></tbody></table></div></div><div class="mt-8 pt-8 border-t border-border"><button onclick="openPrintPreview()" class="w-full py-3 rounded-xl bg-brand text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand/20 hover:bg-brand/90 transition-all"><i class="ph-bold ph-printer text-xl"></i> طباعة كشف الحساب</button></div></div><div id="admin-delete-zone" class="p-4 bg-danger-soft border-t border-danger/10 no-print hidden"><button onclick="openDeleteConfirm()" class="w-full py-3 rounded-xl bg-danger text-white font-bold text-xs flex items-center justify-center gap-2 transition-all hover:bg-danger/90 shadow-lg shadow-danger/20"><i class="ph-bold ph-trash"></i> حذف العميل</button></div></div></div>
+<div id="delete-confirm-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-overlay backdrop-blur-sm animate-fade" onclick="closeModal('delete-confirm-modal')"></div><div class="relative bg-surface w-full max-w-sm rounded-3xl p-6 card-shadow text-center animate-scale"><div class="w-16 h-16 bg-danger-soft text-danger rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph-bold ph-warning-circle text-3xl"></i></div><h3 class="text-xl font-black mb-2 text-text">تأكيد الحذف</h3><p class="text-text-dim text-sm mb-6">هل أنت متأكد من حذف العميل <span id="delete-client-name" class="text-text font-bold"></span>؟ لا يمكن التراجع عن هذا الإجراء.</p><div class="flex gap-3"><button onclick="closeModal('delete-confirm-modal')" class="flex-1 py-3 rounded-xl bg-background border border-border font-bold text-sm hover:bg-surface text-text transition-colors">إلغاء</button><button onclick="confirmDeleteClient()" class="flex-1 py-3 rounded-xl bg-danger text-white font-bold text-sm shadow-lg shadow-danger/20">تأكيد الحذف</button></div></div></div>
+<div id="settings-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4"><div class="absolute inset-0 bg-overlay backdrop-blur-sm animate-fade" onclick="closeModal('settings-modal')"></div><div class="relative bg-surface w-full max-w-lg rounded-3xl max-h-[80vh] flex flex-col overflow-hidden card-shadow animate-scale"><div class="p-5 border-b border-border flex justify-between items-center"><h3 class="font-black text-text">الإعدادات</h3><button onclick="closeModal('settings-modal')" class="p-2 bg-background rounded-lg text-text-dim hover:text-text"><i class="ph-bold ph-x"></i></button></div><div class="flex-1 overflow-y-auto p-5"><div class="flex gap-1 mb-6 bg-background p-1.5 rounded-2xl border border-border"><button onclick="setSettingsTab('general')" id="tab-general" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all bg-brand text-white shadow-md">العامة</button><button onclick="setSettingsTab('data')" id="tab-data" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all text-text-dim hover:bg-surface">البيانات</button></div><div id="settings-general"><form onsubmit="saveSettings(event)" class="space-y-4"><input id="set-name" placeholder="الاسم" class="w-full bg-background text-text p-3 rounded-xl text-sm outline-none border border-border focus:border-brand" /><input id="set-logo" placeholder="رابط اللوجو" class="w-full bg-background text-text p-3 rounded-xl text-sm outline-none border border-border focus:border-brand" /><input id="set-info" placeholder="معلومات التواصل" class="w-full bg-background text-text p-3 rounded-xl text-sm outline-none border border-border focus:border-brand" /><button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm">حفظ</button></form></div><div id="settings-data" class="hidden space-y-3"><button onclick="exportData()" class="w-full bg-brand text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"><i class="ph-bold ph-download-simple text-lg"></i> تصدير النسخة</button><label class="w-full bg-success text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"><i class="ph-bold ph-upload-simple text-lg"></i> استيراد النسخة<input type="file" class="hidden" onchange="importData(event)" accept=".json" /></label></div></div></div></div>
+
+<!-- Firebase & Application Logic -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, doc, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        projectId: "sunlit-segment-470307-f7",
+        appId: "1:959418264422:web:4343a18641c476838bb6a7",
+        apiKey: "AIzaSyB_tprVFg33vOgg2l0941_cil7glyqYYRk",
+        authDomain: "sunlit-segment-470307-f7.firebaseapp.com",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app, "ai-studio-5cff9370-970c-408a-bf68-0eb47a873db5");
+    const auth = getAuth(app);
+
+    let state = { clients: [], config: { name: 'مصنع مصطفى عبد الرحمن', logo: 'https://cdn-icons-png.flaticon.com/512/1532/1532688.png', info: 'تواصل: 0123456789' } };
+    let currentUser = JSON.parse(localStorage.getItem('mustafa_user')) || null;
+    let selectedClientId = null;
+    let currentTxType = null;
+    let unsubClients = null;
+    let unsubConfig = null;
+
+    function init() {
+        applyTheme();
+        if (currentUser) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            initFirebaseListeners();
+        } else {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+            updateConfigUI();
+        }
+    }
+
+    function initFirebaseListeners() {
+        if(unsubConfig) unsubConfig();
+        unsubConfig = onSnapshot(doc(db, 'config', 'main'), (docSnap) => {
+            if (docSnap.exists()) { state.config = docSnap.data(); updateConfigUI(); }
+        }, (error) => {
+            console.error("Config Error:", error);
+            showToast("خطأ في جلب الإعدادات. تأكد من الصلاحيات.", "error");
+        });
+
+        if(unsubClients) unsubClients();
+        unsubClients = onSnapshot(query(collection(db, 'clients'), orderBy('name')), (snapshot) => {
+            state.clients = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderClients();
+            if (selectedClientId && !document.getElementById('history-modal').classList.contains('hidden')) {
+                openHistory(selectedClientId);
+            }
+        }, (error) => {
+            console.error("Clients Error:", error);
+            showToast("خطأ في جلب العملاء. تأكد من الصلاحيات.", "error");
+        });
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `${type === 'success' ? 'bg-success' : 'bg-danger'} text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg animate-slide flex items-center gap-2`;
+        toast.innerHTML = `<i class="ph-bold ${type === 'success' ? 'ph-check-circle' : 'ph-warning-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; toast.style.transition = 'all 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function applyTheme() {
+        const isDark = localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) { document.documentElement.classList.add('dark'); document.getElementById('theme-icon')?.classList.replace('ph-moon', 'ph-sun'); } 
+        else { document.documentElement.classList.remove('dark'); document.getElementById('theme-icon')?.classList.replace('ph-sun', 'ph-moon'); }
+    }
+
+    window.toggleTheme = () => { localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'light' : 'dark'); applyTheme(); };
+
+    window.setLoginMode = (mode) => {
+        const btnG = document.getElementById('tab-google'), btnC = document.getElementById('tab-custom');
+        const formG = document.getElementById('google-login-form'), formC = document.getElementById('custom-login-form');
+        if (mode === 'google') {
+            btnG.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all bg-brand text-white shadow-lg'; btnC.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all text-text-dim hover:bg-surface';
+            formG.classList.remove('hidden'); formC.classList.add('hidden');
+        } else {
+            btnC.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all bg-brand text-white shadow-lg'; btnG.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm transition-all text-text-dim hover:bg-surface';
+            formC.classList.remove('hidden'); formG.classList.add('hidden');
+        }
+    };
+
+    window.handleLogin = async (mode, e) => {
+        if (e) e.preventDefault();
+        const errEl = document.getElementById('auth-error'); errEl.classList.add('hidden');
+        try {
+            if (mode === 'google') {
+                const result = await signInWithPopup(auth, new GoogleAuthProvider());
+                currentUser = { username: result.user.displayName, role: 'admin', email: result.user.email };
+                localStorage.setItem('mustafa_user', JSON.stringify(currentUser));
+                init();
+            } else {
+                const u = document.getElementById('login-username').value, p = document.getElementById('login-password').value;
+                const q = query(collection(db, 'users'), where('username', '==', u), where('password', '==', p));
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    currentUser = { username: u, role: snapshot.docs[0].data().role || 'admin' };
+                    localStorage.setItem('mustafa_user', JSON.stringify(currentUser));
+                    init();
+                } else {
+                    errEl.innerText = 'اسم المستخدم أو كلمة المرور غير صحيحة'; errEl.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            errEl.innerText = error.message || 'خطأ في الاتصال بقاعدة البيانات'; errEl.classList.remove('hidden');
+        }
+    };
+
+    window.handleLogout = () => { localStorage.removeItem('mustafa_user'); currentUser = null; if(unsubClients) unsubClients(); if(unsubConfig) unsubConfig(); init(); };
+
+    function updateConfigUI() {
+        document.getElementById('header-logo').src = state.config.logo || ''; document.getElementById('header-title').innerText = state.config.name || '';
+        document.getElementById('login-logo').src = state.config.logo || ''; document.getElementById('login-title').innerText = state.config.name || '';
+        document.getElementById('set-name').value = state.config.name || ''; document.getElementById('set-logo').value = state.config.logo || ''; document.getElementById('set-info').value = state.config.info || '';
+    }
+
+    window.renderClients = () => {
+        const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        const filtered = state.clients.filter(c => c.name.toLowerCase().includes(searchTerm));
+        let totalDebt = 0, totalPaid = 0;
+        const grid = document.getElementById('clients-grid'); grid.innerHTML = '';
+
+        state.clients.forEach(c => { totalDebt += (c.total || 0) - (c.paid || 0); totalPaid += (c.paid || 0); });
+        document.getElementById('stat-debt').innerText = totalDebt.toLocaleString();
+        document.getElementById('stat-paid').innerText = totalPaid.toLocaleString();
+        document.getElementById('stat-clients').innerText = state.clients.length;
+
+        filtered.forEach(c => {
+            const remaining = (c.total || 0) - (c.paid || 0);
+            grid.innerHTML += `
+                <div class="bg-surface p-5 sm:p-6 rounded-3xl card-shadow border border-border hover:border-brand/30 transition-all group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-brand group-hover:bg-brand group-hover:text-white transition-all"><i class="ph-bold ph-users text-xl"></i></div><h3 class="text-lg font-black truncate max-w-[150px] sm:max-w-none text-text">${c.name}</h3></div>
+                        <button onclick="openHistory('${c.id}')" class="p-2 bg-background rounded-lg text-text-dim hover:text-brand transition-colors"><i class="ph-bold ph-clock-counter-clockwise text-lg"></i></button>
+                    </div>
+                    <div class="mb-6"><p class="text-text-dim text-[10px] font-black mb-1 uppercase tracking-wider">المبلغ المتبقي</p><div class="text-2xl font-black text-brand">${remaining.toLocaleString()} <span class="text-xs font-medium">ج.م</span></div></div>
+                    <div class="flex gap-2">
+                        <button onclick="openTransaction('${c.id}', 'payment')" class="flex-1 bg-success text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-success/20 hover:bg-success/90 hover:scale-[1.02] active:scale-95 transition-all">تحصيل</button>
+                        <button onclick="openTransaction('${c.id}', 'debt')" class="flex-1 bg-brand-soft text-brand border border-brand/20 py-2.5 rounded-xl font-bold text-xs hover:bg-brand hover:text-white transition-all">دين جديد</button>
+                    </div>
+                </div>`;
+        });
+    };
+
+    window.addClient = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        try {
+            btn.innerText = 'جاري الحفظ...'; btn.disabled = true;
+            const name = document.getElementById('new-client-name').value, total = parseFloat(document.getElementById('new-client-total').value);
+            await addDoc(collection(db, 'clients'), { name, total, paid: 0, history: [{ date: new Date().toISOString(), type: 'debt', amount: total, user: currentUser?.username || 'Admin' }] });
+            closeModal('add-client-modal'); e.target.reset(); showToast('تم إضافة العميل بنجاح');
+        } catch (error) {
+            console.error(error); showToast('فشل الإضافة: تأكد من الصلاحيات', 'error');
+        } finally {
+            btn.innerText = originalText; btn.disabled = false;
+        }
+    };
+
+    window.openTransaction = (clientId, type) => {
+        selectedClientId = clientId; currentTxType = type;
+        const client = state.clients.find(c => c.id === clientId);
+        document.getElementById('tx-title').innerText = type === 'payment' ? 'تحصيل دفعة' : 'دين جديد';
+        document.getElementById('tx-client-name').innerText = client.name;
+        document.getElementById('tx-submit-btn').className = `w-full py-3 rounded-xl font-bold text-white ${type === 'payment' ? 'bg-success' : 'bg-brand'}`;
+        document.getElementById('tx-amount').value = ''; document.getElementById('tx-notes').value = '';
+        openModal('transaction-modal');
+    };
+
+    window.submitTransaction = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('tx-submit-btn'); const originalText = btn.innerText;
+        try {
+            btn.innerText = 'جاري الحفظ...'; btn.disabled = true;
+            const amount = parseFloat(document.getElementById('tx-amount').value), notes = document.getElementById('tx-notes').value;
+            const client = state.clients.find(c => c.id === selectedClientId); if (!client) return;
+            
+            const newPaid = currentTxType === 'payment' ? (client.paid || 0) + amount : (client.paid || 0);
+            const newTotal = currentTxType === 'debt' ? (client.total || 0) + amount : (client.total || 0);
+            const newHistory = [...(client.history || []), { date: new Date().toISOString(), type: currentTxType, amount, notes, user: currentUser?.username || 'Admin' }];
+
+            await updateDoc(doc(db, 'clients', selectedClientId), { paid: newPaid, total: newTotal, history: newHistory });
+            closeModal('transaction-modal'); showToast(currentTxType === 'payment' ? 'تم تسجيل الدفعة بنجاح' : 'تم إضافة الدين بنجاح');
+        } catch (error) {
+            console.error(error); showToast('فشل الحفظ: تأكد من الصلاحيات', 'error');
+        } finally {
+            btn.innerText = originalText; btn.disabled = false;
+        }
+    };
+
+    window.openHistory = (clientId) => {
+        selectedClientId = clientId; const client = state.clients.find(c => c.id === clientId); if (!client) return;
+        document.getElementById('hist-client-name').innerText = client.name;
+        const delZone = document.getElementById('admin-delete-zone');
+        if (currentUser?.role === 'admin') delZone.classList.remove('hidden'); else delZone.classList.add('hidden');
+
+        let balance = 0;
+        const sortedHistory = [...(client.history || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const historyWithBalance = sortedHistory.map(h => { balance += h.type === 'payment' ? -h.amount : h.amount; return { ...h, balance }; }).reverse();
+
+        const tbody = document.getElementById('history-table-body'); tbody.innerHTML = '';
+        historyWithBalance.forEach((h, i) => {
+            const actualIndex = client.history.indexOf(sortedHistory[sortedHistory.length - 1 - i]);
+            const dateStr = new Date(h.date).toLocaleString('ar-EG').split(',')[0], isPay = h.type === 'payment';
+            tbody.innerHTML += `
+                <tr class="hover:bg-brand-soft transition-colors">
+                    <td class="p-4 text-text-dim font-bold text-xs">${dateStr}</td>
+                    <td class="p-4"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full ${isPay ? 'bg-success' : 'bg-brand'}"></div><span class="font-bold text-text">${isPay ? 'تحصيل دفعة' : 'إضافة مديونية'}</span></div>${h.notes ? `<p class="text-[10px] text-text-dim mt-1 font-medium">${h.notes}</p>` : ''}</td>
+                    <td class="p-4 font-black ${isPay ? 'text-success' : 'text-brand'}">${isPay ? '-' : '+'}${h.amount.toLocaleString()}</td>
+                    <td class="p-4 font-black text-text bg-brand-soft">${h.balance.toLocaleString()}</td>
+                    <td class="p-4 no-print"><div class="flex gap-1"><button onclick="deleteTransaction(${actualIndex})" class="p-2 text-danger hover:bg-danger-soft rounded-xl transition-colors"><i class="ph-bold ph-trash text-lg"></i></button></div></td>
+                </tr>`;
+        });
+        openModal('history-modal');
+    };
+
+    window.deleteTransaction = async (index) => {
+        if (!confirm('هل أنت متأكد من حذف هذه المعاملة؟')) return;
+        try {
+            const client = state.clients.find(c => c.id === selectedClientId); const tx = client.history[index];
+            const newPaid = tx.type === 'payment' ? client.paid - tx.amount : client.paid;
+            const newTotal = tx.type === 'debt' ? client.total - tx.amount : client.total;
+            const newHistory = [...client.history]; newHistory.splice(index, 1);
+            
+            await updateDoc(doc(db, 'clients', selectedClientId), { paid: newPaid, total: newTotal, history: newHistory });
+            showToast('تم حذف المعاملة بنجاح');
+        } catch (error) {
+            console.error(error); showToast('فشل الحذف: تأكد من الصلاحيات', 'error');
+        }
+    };
+
+    window.openDeleteConfirm = () => { document.getElementById('delete-client-name').innerText = `"${state.clients.find(c => c.id === selectedClientId).name}"`; openModal('delete-confirm-modal'); };
+    
+    window.confirmDeleteClient = async () => { 
+        try {
+            await deleteDoc(doc(db, 'clients', selectedClientId)); 
+            closeModal('delete-confirm-modal'); closeModal('history-modal'); showToast('تم حذف العميل بنجاح'); 
+        } catch (error) {
+            console.error(error); showToast('فشل الحذف: تأكد من الصلاحيات', 'error');
+        }
+    };
+
+    window.openPrintPreview = () => {
+        const client = state.clients.find(c => c.id === selectedClientId); if (!client) return;
+        document.getElementById('print-company-name').innerText = state.config.name; document.getElementById('print-company-info').innerText = state.config.info; document.getElementById('print-company-logo').src = state.config.logo;
+        document.getElementById('print-layout-client-name').innerText = client.name; document.getElementById('print-client-id').innerText = `ACC-${client.id.substring(0,6).toUpperCase()}`;
+        document.getElementById('print-layout-date').innerText = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+        
+        const total = client.total || 0, paid = client.paid || 0, balance = total - paid;
+        document.getElementById('print-summary-total').innerText = total.toLocaleString(); document.getElementById('print-summary-paid').innerText = paid.toLocaleString(); document.getElementById('print-summary-balance').innerText = balance.toLocaleString();
+
+        const tbody = document.getElementById('print-layout-tbody'); tbody.innerHTML = '';
+        let currentBalance = 0;
+        const sortedHistory = [...(client.history || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+        sortedHistory.forEach(h => {
+            const isPay = h.type === 'payment'; currentBalance += isPay ? -h.amount : h.amount;
+            const dateStr = new Date(h.date).toLocaleString('ar-EG', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+            const desc = isPay ? 'تحصيل نقدي' : 'سحب بضاعة'; const user = h.user || 'Admin';
+            const debit = isPay ? '-' : h.amount.toLocaleString(), credit = isPay ? h.amount.toLocaleString() : '-';
+            const debitClass = isPay ? 'text-[#3b82f6]' : 'text-[#3b82f6]', creditClass = isPay ? 'text-[#22c55e]' : 'text-[#22c55e]';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td class="border border-slate-200 p-4 text-center font-bold text-slate-600 text-xs">${dateStr}</td>
+                    <td class="border border-slate-200 p-4 text-center"><div class="font-black text-slate-800">${desc}</div><div class="text-[10px] text-slate-400 font-bold mt-1">المسؤول: ${user}</div></td>
+                    <td class="border border-slate-200 p-4 text-center font-black ${debitClass}">${debit}</td>
+                    <td class="border border-slate-200 p-4 text-center font-black ${creditClass}">${credit}</td>
+                    <td class="border border-slate-200 p-4 text-center font-black text-slate-800">${currentBalance.toLocaleString()}</td>
+                </tr>`;
+        });
+        document.getElementById('print-preview-modal').classList.remove('hidden'); closeModal('history-modal');
+    };
+
+    window.closePrintPreview = () => { document.getElementById('print-preview-modal').classList.add('hidden'); openModal('history-modal'); };
+    window.executePrint = () => { window.print(); };
+
+    window.downloadAsImage = async () => {
+        const element = document.getElementById('print-only-section'), btn = document.getElementById('download-img-btn'), originalText = btn.innerHTML;
+        try {
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> جاري التحميل...'; btn.disabled = true;
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const link = document.createElement('a');
+            link.download = `كشف_حساب_${document.getElementById('print-layout-client-name').innerText}_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png'); link.click();
+            showToast('تم تحميل الصورة بنجاح');
+        } catch (error) { console.error(error); showToast('فشل تحميل الصورة', 'error'); } 
+        finally { btn.innerHTML = originalText; btn.disabled = false; }
+    };
+
+    window.setSettingsTab = (tab) => {
+        const btnGen = document.getElementById('tab-general'), btnData = document.getElementById('tab-data');
+        const divGen = document.getElementById('settings-general'), divData = document.getElementById('settings-data');
+        if (tab === 'general') {
+            btnGen.className = 'flex-
