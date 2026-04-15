@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مصنع مصطفى عبد الرحمن</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "firebase/app": "https://esm.sh/firebase@10.8.0/app",
+      "firebase/firestore": "https://esm.sh/firebase@10.8.0/firestore",
+      "firebase/auth": "https://esm.sh/firebase@10.8.0/auth",
+      "motion/react": "https://esm.sh/framer-motion@11.0.0",
+      "html-to-image": "https://esm.sh/html-to-image@1.11.11",
+      "lucide-react": "https://esm.sh/lucide-react@0.344.0",
+      "clsx": "https://esm.sh/clsx@2.1.0",
+      "tailwind-merge": "https://esm.sh/tailwind-merge@2.2.1"
+    }
+  }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+    :root { --background: #f8fafc; --surface: #fff; --border: #e2e8f0; --text-main: #0f172a; --text-dim: #64748b; --color-brand: #2563eb; }
+    .dark { --background: #020617; --surface: #0f172a; --border: #1e293b; --text-main: #f1f5f9; --text-dim: #94a3b8; }
+    body { background-color: var(--background); color: var(--text-main); font-family: 'Tajawal', sans-serif; }
+    .card-shadow { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    .pulse-live { background: #10b981; border-radius: 50%; width: 8px; height: 8px; animation: 2s infinite pulse; display: inline-block; }
+    @keyframes pulse { 50% { opacity: 0.5; } }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    import { StrictMode, useState, useEffect, useMemo, useRef, Component } from "react";
+    import { createRoot } from "react-dom/client";
+    import { initializeApp } from "firebase/app";
+    import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, increment, arrayUnion, setDoc, getDocFromServer } from "firebase/firestore";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+    import { motion, AnimatePresence } from "motion/react";
+    import { jsx, jsxs, Fragment } from "react/jsx-runtime";
+    import { LogOut, LogIn, Plus, Search, History, TrendingUp, Wallet, Settings, Sun, Moon, User, Printer, Trash2, X, Download, Upload, CheckCircle, AlertCircle } from "lucide-react";
+
+    const ee = {
+      projectId: "gen-lang-client-0918436313",
+      appId: "1:899032365173:web:2cc0d339bd13ca2ba4a03c",
+      apiKey: "AIzaSyDwMYNObLUra6EvaiYR59ucUkk_9-Onp3U",
+      authDomain: "gen-lang-client-0918436313.firebaseapp.com",
+      firestoreDatabaseId: "ai-studio-61630fe8-a2f1-4bf6-be17-e82ba15c478c",
+      storageBucket: "gen-lang-client-0918436313.firebasestorage.app",
+      messagingSenderId: "899032365173"
+    };
+
+    const ue = initializeApp(ee);
+    const c = getFirestore(ue, ee.firestoreDatabaseId);
+    const g = getAuth(ue);
+    const xe = new GoogleAuthProvider();
+
+    function App() {
+      return jsx("div", { className: "p-10 text-center", children: "جاري تحميل التطبيق..." });
+    }
+
+    createRoot(document.getElementById("root")).render(jsx(StrictMode, { children: jsx(App, {}) }));
+  </script>
+</body>
+</html>
