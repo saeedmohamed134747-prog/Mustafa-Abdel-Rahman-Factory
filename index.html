@@ -8,29 +8,34 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Robust Error Handler -->
+    <!-- Robust Crash Guard -->
     <script>
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            document.body.innerHTML = `
-                <div style="padding: 20px; font-family: sans-serif; color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; margin: 20px;">
-                    <h1 style="font-size: 18px; margin-bottom: 10px;">حدث خطأ أثناء تشغيل الملف - System Error</h1>
-                    <p style="font-size: 14px; margin-bottom: 4px;"><strong>Message:</strong> ${msg}</p>
-                    <p style="font-size: 14px;"><strong>Line:</strong> ${lineNo}</p>
-                    <p style="font-size: 14px; margin-top: 10px; color: #64748b;">هذا الخطأ غالباً بسبب عدم تحميل المكتبات الخارجية. تأكد من اتصالك بالإنترنت.</p>
-                </div>
-            `;
+        window.onerror = function(msg, url, line, col, error) {
+            console.error("System Crash:", msg, error);
+            const root = document.getElementById('root');
+            if (root) {
+                root.innerHTML = `
+                    <div style="padding: 40px; font-family: 'Inter', 'Tajawal', sans-serif; text-align: center; background: #fff1f2; color: #991b1b; border: 2px solid #edafaf; border-radius: 24px; margin: 60px auto; max-width: 600px; direction: rtl; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+                        <h1 style="font-size: 22px; font-weight: 900; margin-bottom: 20px;">خطأ في تشغيل النظام</h1>
+                        <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-family: monospace; font-size: 13px; color: #444;">
+                            ${msg} <br> [Line: ${line}]
+                        </div>
+                        <p style="font-size: 14px; color: #b91c1c; font-weight: 600;">يرجى التأكد من اتصال الإنترنت وتحديث الصفحة.</p>
+                        <button onclick="location.reload()" style="margin-top: 25px; background: #991b1b; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 900; cursor: pointer;">إعادة تشغيل النظام</button>
+                    </div>`;
+            }
             return false;
         };
     </script>
 
     <!-- Dependencies -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.4/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js" crossorigin></script>
-    <script src="https://unpkg.com/lucide@latest" crossorigin></script>
-    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -38,14 +43,13 @@
                 extend: {
                     colors: {
                         brand: { DEFAULT: '#2563eb', soft: '#eff6ff' },
+                        success: { DEFAULT: '#10b981', soft: '#ecfdf5' },
+                        danger: { DEFAULT: '#ef4444', soft: '#fef2f2' },
+                        warning: { DEFAULT: '#f59e0b', soft: '#fffbeb' },
                         background: '#ffffff',
                         surface: '#ffffff',
                         border: '#e2e8f0',
                         text: { DEFAULT: '#0f172a', dim: '#64748b' },
-                        success: { DEFAULT: '#10b981', soft: '#ecfdf5' },
-                        warning: { DEFAULT: '#f59e0b', soft: '#fffbeb' },
-                        danger: { DEFAULT: '#ef4444', soft: '#fef2f2' },
-                        overlay: 'rgba(0, 0, 0, 0.6)',
                     },
                     fontFamily: {
                         sans: ['Inter', 'Tajawal', 'sans-serif'],
@@ -57,61 +61,60 @@
     </script>
 
     <style>
-        body { font-family: 'Inter', 'Tajawal', sans-serif; background-color: #ffffff; color: #0f172a; direction: rtl; margin: 0; padding: 0; min-height: 100vh; display: flex; flex-col: column; }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        input, select, textarea { transition: all 0.2s ease; border-radius: 12px; }
-        input:focus { border-color: #2563eb; ring: 2px; ring-color: #eff6ff; }
+        body { font-family: 'Inter', 'Tajawal', sans-serif; background-color: #ffffff; color: #0f172a; direction: rtl; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+        .card-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-bottom: 1px solid #e2e8f0; }
+        @media print { .no-print { display: none !important; } .print-area { display: block !important; width: 100% !important; margin: 0 !important; } }
+        .main-footer { border-top: 1px solid #e2e8f0; padding: 35px 0; text-align: center; color: #64748b; font-weight: 800; font-size: 13px; margin-top: auto; }
         
-        @media print {
-            .no-print { display: none !important; }
-            html, body { background: white !important; margin: 0 !important; }
-            #root { height: auto !important; position: static !important; }
-            .print-layer { display: block !important; position: static !important; width: 100% !important; border: none !important; box-shadow: none !important; }
-            @page { size: A4; margin: 10mm; }
-        }
-
-        .footer-fixed {
-            border-top: 1px solid #e2e8f0;
-            padding: 24px 0;
-            text-align: center;
-            font-size: 13px;
-            color: #64748b;
-            font-weight: 700;
-            margin-top: auto;
-            width: 100%;
-        }
-
         #root { flex: 1; display: flex; flex-direction: column; }
+        
+        /* Shimmer loading */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: #2563eb; border-radius: 50%; animate: spin 1s linear infinite;"></div>
+            <p style="margin-top: 20px; font-family: 'Tajawal', sans-serif; font-weight: 700; color: #2563eb;">جاري تهيئة النظام...</p>
+        </div>
+    </div>
 
     <script type="text/babel">
-        // Ensure all globals are locked
-        const React = window.React;
-        const ReactDOM = window.ReactDOM;
         const { useState, useEffect, useMemo, useRef } = React;
-        const MotionLib = window.Motion || window.FramerMotion;
-        const { motion, AnimatePresence } = MotionLib;
+        const { motion, AnimatePresence } = window.Motion || window.FramerMotion || { motion: ({children})=><div>{children}</div>, AnimatePresence: ({children})=><div>{children}</div> };
 
-        // --- Robust Icon Builder ---
+        // --- ULTRA SAFE Icon Component ---
         const Icon = ({ name, className = "w-5 h-5", strokeWidth = 2.5 }) => {
-            const svgRef = useRef(null);
+            const iconRef = useRef(null);
+            
             useEffect(() => {
-                const lucide = window.lucide;
-                if (lucide && svgRef.current) {
-                    svgRef.current.innerHTML = '';
-                    const camelName = name.split('-').map((s, i) => i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1)).join('');
-                    const PascalName = camelName.charAt(0).toUpperCase() + camelName.slice(1);
-                    const libIcon = lucide.icons[PascalName] || lucide.icons[camelName] || lucide.icons[name];
-                    if (libIcon) {
-                        const svg = libIcon.toSvg({ class: className, 'stroke-width': strokeWidth });
-                        svgRef.current.innerHTML = svg;
+                if (window.lucide && iconRef.current) {
+                    iconRef.current.innerHTML = '';
+                    const i = document.createElement('i');
+                    i.setAttribute('data-lucide', name);
+                    i.className = className;
+                    iconRef.current.appendChild(i);
+                    
+                    try {
+                        window.lucide.createIcons({
+                            icons: window.lucide.icons,
+                            nameAttr: 'data-lucide',
+                            attrs: { 'stroke-width': strokeWidth }
+                        });
+                    } catch (e) {
+                        console.warn("Lucide Error:", e);
                     }
                 }
             }, [name, className, strokeWidth]);
-            return <span ref={svgRef} className="inline-flex items-center justify-center translate-y-[1px]" />;
+
+            return <span ref={iconRef} className="inline-flex items-center justify-center leading-none" />;
         };
 
         const Plus = (p) => <Icon name="plus" {...p} />;
@@ -126,45 +129,44 @@
         const X = (p) => <Icon name="x" {...p} />;
         const Printer = (p) => <Icon name="printer" {...p} />;
         const Image = (p) => <Icon name="image" {...p} />;
-        const Loader2 = (p) => <Icon name="loader-2" {...p} />;
+        const UserIcon = (p) => <Icon name="user" {...p} />;
         const Factory = (p) => <Icon name="factory" {...p} />;
 
-        // --- Simulated Database ---
+        // --- Data Persistence ---
         const DB = {
-            get: (key, def) => JSON.parse(localStorage.getItem(key) || JSON.stringify(def)),
-            set: (key, val) => localStorage.setItem(key, JSON.stringify(val))
+            get: (key, def) => {
+                try {
+                    const val = localStorage.getItem(key);
+                    return val ? JSON.parse(val) : def;
+                } catch { return def; }
+            },
+            set: (key, val) => {
+                try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+            }
         };
 
-        const formatDate = (dateStr) => {
-            try {
-                const d = new Date(dateStr);
-                return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('ar-EG', { year:'numeric', month:'2-digit', day:'2-digit' });
-            } catch { return dateStr; }
+        const formatDate = (date) => {
+            if (!date) return '-';
+            return new Date(date).toLocaleDateString('ar-EG', { year:'numeric', month:'2-digit', day:'2-digit' });
         };
 
-        function MainApp() {
-            // Auth State
+        function App() {
             const [user, setUser] = useState(null);
             const [isAuthorized, setIsAuthorized] = useState(false);
             const [authError, setAuthError] = useState(null);
             
-            // Core Application Data
-            const [clients, setClients] = useState(DB.get('clients_v4', []));
-            const [config, setConfig] = useState(DB.get('config_v4', {
-                name: 'مصنع مصطفى عبد الرحمن',
-                logo: 'https://cdn-icons-png.flaticon.com/512/1532/1532688.png',
-                info: 'تواصل: 01000000000'
-            }));
-            const [appUsers, setAppUsers] = useState(DB.get('users_v4', []));
+            const [clients, setClients] = useState(DB.get('clients_final', []));
+            const [config, setConfig] = useState(DB.get('config_final', { name: 'مصنع مصطفى عبد الرحمن', logo: 'https://cdn-icons-png.flaticon.com/512/1532/1532688.png', info: 'تواصل: 01000000000' }));
+            const [appUsers, setAppUsers] = useState(DB.get('users_final', []));
             
-            // UI Switchers
             const [loading, setLoading] = useState(true);
             const [searchTerm, setSearchTerm] = useState('');
             const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const [selectedId, setSelectedId] = useState(null);
-            const [isTxModal, setIsTxModal] = useState({ open: false, type: '' });
+            const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+            const [isAddDebtModalOpen, setIsAddDebtModalOpen] = useState(false);
             const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const [amount, setAmount] = useState('');
             const [notes, setNotes] = useState('');
             const [toast, setToast] = useState(null);
@@ -175,78 +177,48 @@
 
             const activeClient = useMemo(() => clients.find(c => c.id === selectedId), [clients, selectedId]);
 
-            // Load Session
             useEffect(() => {
-                const session = localStorage.getItem('user_session_v4');
-                if (session) { setUser(JSON.parse(session)); setIsAuthorized(true); }
+                const session = DB.get('user_session_final');
+                if (session) { setUser(session); setIsAuthorized(true); }
                 setLoading(false);
             }, []);
 
-            // Auto Persist
-            useEffect(() => { DB.set('clients_v4', clients); }, [clients]);
-            useEffect(() => { DB.set('config_v4', config); }, [config]);
-            useEffect(() => { DB.set('users_v4', appUsers); }, [appUsers]);
+            useEffect(() => { 
+                DB.set('clients_final', clients); 
+                DB.set('config_final', config); 
+                DB.set('users_final', appUsers); 
+            }, [clients, config, appUsers]);
 
-            const toastMsg = (msg, type = 'success') => {
-                setToast({ msg, type, id: Date.now() });
-                setTimeout(() => setToast(null), 3000);
-            };
+            const showToast = (msg, type = 'success') => { setToast({msg, type}); setTimeout(() => setToast(null), 3000); };
 
             const handleLogin = (e) => {
                 e.preventDefault();
-                const fd = new FormData(e.target);
-                const u = fd.get('username');
-                const p = fd.get('password');
-                
+                const u = e.target.u.value;
+                const p = e.target.p.value;
                 if (u === 'احمد عبد الرحمن' && p === 'Shousha30') {
-                    const admin = { uid: 'admin', name: u, role: 'admin' };
-                    setUser(admin); setIsAuthorized(true); localStorage.setItem('user_session_v4', JSON.stringify(admin));
+                    const admin = { name: u, role: 'admin' }; setUser(admin); setIsAuthorized(true); DB.set('user_session_final', admin);
                 } else {
                     const found = appUsers.find(x => x.username === u && x.password === p);
-                    if (found) {
-                        const sess = { uid: found.id, name: found.username, role: found.role || 'user' };
-                        setUser(sess); setIsAuthorized(true); localStorage.setItem('user_session_v4', JSON.stringify(sess));
-                    } else setAuthError('كلمة المرور غير صحيحة');
+                    if (found) { const uObj = { name: found.username, role: 'user' }; setUser(uObj); setIsAuthorized(true); DB.set('user_session_final', uObj); }
+                    else setAuthError('بيانات الدخول غير صحيحة');
                 }
             };
 
-            const logout = () => { localStorage.removeItem('user_session_v4'); setUser(null); setIsAuthorized(false); };
+            const logout = () => { localStorage.removeItem('user_session_final'); setUser(null); setIsAuthorized(false); };
 
             const saveClient = (e) => {
                 e.preventDefault();
-                const fd = new FormData(e.target);
-                const name = fd.get('name');
-                const val = parseFloat(fd.get('val'));
+                const name = e.target.name.value;
+                const val = parseFloat(e.target.val.value);
                 if (!name || isNaN(val)) return;
-                
-                const newC = { 
-                    id: Date.now().toString(), 
-                    name, 
-                    total: val, paid: 0, 
-                    history: [{ amount: val, user: user.name, date: new Date().toISOString(), type: 'debt' }],
-                    createdAt: new Date().toISOString()
-                };
-                setClients(p => [...p, newC]);
-                setIsAddModalOpen(false); toastMsg('تم الحفظ بنجاح');
+                const newC = { id: Date.now().toString(), name, total: val, paid: 0, history: [{ amount: val, user: user.name, date: new Date().toISOString(), type: 'debt', notes: 'رصيد افتتاحي' }] };
+                setClients([...clients, newC]); setIsAddModalOpen(false); showToast('تم الحفظ بنجاح');
             };
 
-            const commitTransaction = () => {
-                const val = parseFloat(amount);
-                if (!activeClient || isNaN(val) || val <= 0) return;
-                const type = isTxModal.type;
-                
-                setClients(prev => prev.map(c => {
-                    if (c.id === activeClient.id) {
-                        return {
-                            ...c,
-                            paid: type === 'payment' ? (c.paid || 0) + val : (c.paid || 0),
-                            total: type === 'debt' ? (c.total || 0) + val : (c.total || 0),
-                            history: [...(c.history || []), { amount: val, user: user.name, date: new Date().toISOString(), type, notes: notes.trim() }]
-                        };
-                    }
-                    return c;
-                }));
-                setIsTxModal({ open: false, type: '' }); setAmount(''); setNotes(''); toastMsg('تمت العملية');
+            const commitTx = (type) => {
+                const val = parseFloat(amount); if (isNaN(val) || val <= 0) return;
+                setClients(clients.map(c => c.id === selectedId ? { ...c, paid: type==='payment'?c.paid+val:c.paid, total: type==='debt'?c.total+val:c.total, history: [...c.history, { amount: val, user: user.name, date: new Date().toISOString(), type, notes }] } : c));
+                setIsPayModalOpen(false); setIsAddDebtModalOpen(false); setAmount(''); setNotes(''); showToast('تم التسجيل بنجاح');
             };
 
             const getBalanceList = (hist) => {
@@ -258,54 +230,43 @@
             };
 
             const downloadImage = async () => {
-                const element = document.getElementById('print-content-node');
-                if (!element || !printData) return;
+                const el = document.getElementById('printable-content'); if (!el) return;
                 setIsExporting(true);
                 const PAGE_SIZE = 15;
-                
                 try {
                     if (printData.type === 'statement') {
-                        const h = [...(printData.data.history || [])].sort((a,b)=>new Date(a.date)-new Date(b.date));
-                        const chunks = Math.ceil(h.length / PAGE_SIZE);
-                        
-                        if (chunks > 1) {
-                            for (let i = 0; i < chunks; i++) {
-                                setExportChunk({ index: i, total: chunks });
-                                await new Promise(r => setTimeout(r, 600));
-                                const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-                                const link = document.createElement('a');
-                                link.download = `كشف_${printData.data.name}_${i+1}.png`;
-                                link.href = canvas.toDataURL(); link.click();
-                            }
-                            setExportChunk(null);
-                        } else {
-                            const canvas = await html2canvas(element, { scale: 2 });
+                        const h = [...printData.data.history].sort((a,b)=>new Date(a.date)-new Date(b.date));
+                        const totalChunks = Math.ceil(h.length / PAGE_SIZE);
+                        for (let i = 0; i < totalChunks; i++) {
+                            setExportChunk({ index: i, total: totalChunks });
+                            await new Promise(r => setTimeout(r, 600));
+                            const canvas = await html2canvas(el, { scale: 2, useCORS: true });
                             const link = document.createElement('a'); 
-                            link.download = `كشف_${printData.data.name}.png`;
+                            link.download = `كشف_${printData.data.name}_${i+1}.png`; 
                             link.href = canvas.toDataURL(); link.click();
                         }
+                        setExportChunk(null);
                     } else {
-                        const canvas = await html2canvas(element, { scale: 2 });
-                        const link = document.createElement('a');
-                        link.download = `ايصال_${Date.now()}.png`; link.href = canvas.toDataURL(); link.click();
+                        const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+                        const link = document.createElement('a'); link.download = `إيصال_${Date.now()}.png`; link.href = canvas.toDataURL(); link.click();
                     }
-                    toastMsg('تم التحميل');
-                } catch(e) { toastMsg('خطأ في التحميل', 'danger'); }
-                setIsExporting(false); setExportChunk(null);
+                    showToast('تم التحميل');
+                } catch(e) { showToast('خطأ في التحميل', 'danger'); }
+                setIsExporting(false);
             };
 
-            if (loading) return <div className="h-screen flex flex-col items-center justify-center space-y-4"><Loader2 className="animate-spin text-brand w-10 h-10" /><p className="font-black text-brand text-sm">جاري تشغيل النظام...</p></div>;
+            if (loading) return null; // Controlled by the shimmer/spinner in raw HTML
 
             if (!isAuthorized) return (
                 <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-                    <div className="bg-white p-10 rounded-[3rem] card-shadow w-full max-w-md text-center border">
-                        <img src={config.logo} className="w-20 h-20 mx-auto mb-8 rounded-2xl object-cover shadow-lg" />
-                        <h1 className="text-2xl font-black mb-10">{config.name}</h1>
-                        <form onSubmit={handleLogin} className="space-y-5 text-right">
-                            <div><label className="text-[10px] font-black mr-2 text-slate-400">اسم المستخدم</label><input name="username" required className="w-full bg-slate-50 p-4 font-bold border rounded-2xl outline-none focus:border-brand" /></div>
-                            <div><label className="text-[10px] font-black mr-2 text-slate-400">كلمة المرور</label><input name="password" type="password" required className="w-full bg-slate-50 p-4 font-bold border rounded-2xl outline-none focus:border-brand" /></div>
-                            <button className="w-full bg-brand text-white py-4.5 rounded-2xl font-black text-lg shadow-xl shadow-brand/20">دخول النظام</button>
-                            {authError && <p className="text-danger text-center text-xs font-black mt-2">{authError}</p>}
+                    <div className="bg-white p-12 rounded-[3.5rem] card-shadow w-full max-w-sm text-center border">
+                        <img src={config.logo} className="w-20 h-20 mx-auto mb-8 rounded-2xl object-cover shadow-lg" referrerPolicy="no-referrer" />
+                        <h1 className="text-2xl font-black mb-10 tracking-tighter text-slate-800">{config.name}</h1>
+                        <form onSubmit={handleLogin} className="space-y-5">
+                            <input name="u" placeholder="الاسم" required className="w-full bg-slate-50 p-4 font-bold border rounded-2xl outline-none focus:border-brand" />
+                            <input name="p" type="password" placeholder="كلمة المرور" required className="w-full bg-slate-50 p-4 font-bold border rounded-2xl outline-none focus:border-brand" />
+                            <button className="w-full bg-brand text-white py-4.5 rounded-2xl font-black text-lg shadow-xl shadow-brand/20 active:scale-95 transition-all">دخول النظام</button>
+                            {authError && <p className="text-danger text-xs font-black mt-2">{authError}</p>}
                         </form>
                     </div>
                 </div>
@@ -313,74 +274,43 @@
 
             return (
                 <div className="contents">
-                    <header className="bg-white border-b sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
-                        <div className="flex items-center gap-3"><div className="p-2 bg-brand-soft rounded-xl"><Factory className="text-brand" /></div><h1 className="text-xl font-black tracking-tighter">{config.name}</h1></div>
+                    <header className="glass sticky top-0 z-40 px-6 py-4 flex justify-between items-center no-print">
+                        <div className="flex items-center gap-2"><div className="p-2 bg-brand-soft rounded-xl"><Factory className="text-brand w-5 h-5" /></div><h1 className="text-xl font-black tracking-tighter">{config.name}</h1></div>
                         <div className="flex gap-2">
-                            <button onClick={()=>setIsSettingsOpen(true)} className="p-3 hover:bg-slate-50 rounded-2xl"><Settings className="w-5 h-5"/></button>
-                            <button onClick={logout} className="p-3 text-danger hover:bg-danger-soft rounded-2xl"><LogOut className="w-5 h-5"/></button>
+                            <button onClick={()=>setIsSettingsOpen(true)} className="p-3 hover:bg-slate-50 rounded-xl transition-colors"><Settings className="w-5 h-5"/></button>
+                            <button onClick={logout} className="p-3 text-danger hover:bg-danger-soft rounded-xl transition-colors"><LogOut className="w-5 h-5"/></button>
                         </div>
                     </header>
 
-                    <main className="max-w-7xl mx-auto w-full p-6 space-y-8 flex-1">
+                    <main className="max-w-7xl mx-auto w-full p-6 space-y-8 flex-1 no-print">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100">
-                                <TrendingUp className="text-brand w-5 h-5 mb-2" /><p className="text-text-dim text-[11px] font-black uppercase mb-1">المديونية الكلية</p>
-                                <h1 className="text-3xl font-black text-brand">{(clients.reduce((a,c)=>a+(c.total-c.paid), 0)).toLocaleString()} <span className="text-sm font-medium">ج.م</span></h1>
-                            </div>
-                            <div className="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100">
-                                <Wallet className="text-success w-5 h-5 mb-2" /><p className="text-text-dim text-[11px] font-black uppercase mb-1">التحصيل الكلي</p>
-                                <h1 className="text-3xl font-black text-success">{(clients.reduce((a,c)=>a+c.paid, 0)).toLocaleString()} <span className="text-sm font-medium">ج.م</span></h1>
-                            </div>
-                            <div className="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100">
-                                <Users className="text-warning w-5 h-5 mb-2" /><p className="text-text-dim text-[11px] font-black uppercase mb-1">عدد العملاء</p>
-                                <h1 className="text-3xl font-black text-slate-800">{clients.length}</h1>
-                            </div>
+                            <div className="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100"><TrendingUp className="text-brand w-5 h-5 mb-2"/><p className="text-slate-400 text-[10px] font-black uppercase mb-1">المديونية الكلية</p><h2 className="text-3xl font-black text-brand">{(clients.reduce((a,c)=>a+(c.total-c.paid), 0)).toLocaleString()}</h2></div>
+                            <div className="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100"><Wallet className="text-success w-5 h-5 mb-2"/><p className="text-slate-400 text-[10px] font-black uppercase mb-1">إجمالي التحصيل</p><h2 className="text-3xl font-black text-success">{(clients.reduce((a,c)=>a+c.paid, 0)).toLocaleString()}</h2></div>
+                            <div className="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100"><Users className="text-warning w-5 h-5 mb-2"/><p className="text-slate-400 text-[10px] font-black uppercase mb-1">عدد العملاء</p><h2 className="text-3xl font-black text-slate-800">{clients.length}</h2></div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-5 bg-white rounded-[2rem] border shadow-sm">
-                            <div className="relative w-full sm:max-w-md">
-                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                <input placeholder="ابحث باسم العميل..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full bg-slate-50 rounded-2xl py-4 pr-12 pl-4 text-sm font-bold border-none outline-none focus:ring-2 focus:ring-brand/10" />
-                            </div>
-                            <button onClick={()=>setIsAddModalOpen(true)} className="w-full sm:w-auto bg-brand text-white px-10 py-4 rounded-2xl font-black shadow-lg shadow-brand/20 flex items-center justify-center gap-2"><Plus/> إضافة عميل</button>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-between bg-white p-5 rounded-3xl border shadow-sm">
+                            <div className="relative w-full sm:max-w-md"><Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"/><input placeholder="بحث في قائمة العملاء..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full bg-slate-50 border-none rounded-2xl py-4 pr-12 pl-4 text-sm font-bold outline-none focus:ring-2 focus:ring-brand/10" /></div>
+                            <button onClick={()=>setIsAddModalOpen(true)} className="bg-brand text-white px-10 py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-xl shadow-brand/20 active:scale-95 transition-all"><Plus/> عميل جديد</button>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {clients.filter(c=>c.name.includes(searchTerm)).map(c => (
-                                <motion.div layout key={c.id} className="bg-white p-8 rounded-[3rem] card-shadow border border-slate-100 flex flex-col hover:border-brand/30 transition-all">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-brand text-white rounded-2xl flex items-center justify-center font-black text-xl">{c.name.charAt(0)}</div>
-                                            <h3 className="text-xl font-black">{c.name}</h3>
-                                        </div>
-                                        <button onClick={()=>{setSelectedId(c.id); setIsHistoryOpen(true);}} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-brand transition-all"><History/></button>
-                                    </div>
-                                    <div className="mb-8 p-6 bg-slate-50 rounded-[2rem]">
-                                        <p className="text-slate-400 text-[11px] font-black uppercase mb-1">الرصيد المستحق</p>
-                                        <div className="text-3xl font-black text-brand">{(c.total-c.paid).toLocaleString()} <span className="text-lg">ج.م</span></div>
-                                    </div>
-                                    <div className="flex gap-3 mt-auto">
-                                        <button onClick={()=>{setSelectedId(c.id); setIsTxModal({open:true, type:'payment'});}} className="flex-1 bg-success text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-success/10 active:scale-95 transition-all">تحصيل</button>
-                                        <button onClick={()=>{setSelectedId(c.id); setIsTxModal({open:true, type:'debt'});}} className="flex-1 bg-brand-soft text-brand py-4 rounded-2xl font-black text-sm border border-brand/20 hover:bg-brand hover:text-white transition-all">دين جديد</button>
-                                    </div>
-                                </motion.div>
+                                <div key={c.id} className="bg-white p-8 rounded-[3rem] card-shadow border border-slate-100 flex flex-col hover:border-brand/40 transition-all group">
+                                    <div className="flex justify-between items-start mb-6"><div><h3 className="text-xl font-black tracking-tight">{c.name}</h3><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">بطاقة العميل</p></div><button onClick={()=>{setSelectedId(c.id); setIsHistoryOpen(true);}} className="p-3 bg-slate-50 text-slate-400 hover:text-brand transition-all rounded-xl"><History/></button></div>
+                                    <div className="mb-8 p-6 bg-slate-50 rounded-[2rem] border-2 border-slate-100/50"><p className="text-slate-400 text-[10px] font-black mb-1 uppercase tracking-widest">إجمالي الرصيد</p><div className="text-3xl font-black text-brand">{(c.total-c.paid).toLocaleString()} <span className="text-base font-normal">ج.م</span></div></div>
+                                    <div className="flex gap-3 mt-auto"><button onClick={()=>{setSelectedId(c.id); setIsPayModalOpen(true);}} className="flex-1 bg-success text-white py-4 rounded-2xl font-black shadow-lg shadow-success/10 active:scale-95">تحصيل</button><button onClick={()=>{setSelectedId(c.id); setIsAddDebtModalOpen(true);}} className="flex-1 bg-brand-soft text-brand py-4 rounded-2xl font-black border border-brand/20">دين جديد</button></div>
+                                </div>
                             ))}
                         </div>
                     </main>
 
-                    {/* All Modals Integrated */}
+                    {/* Popups */}
                     <AnimatePresence>
                         {isAddModalOpen && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                                 <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setIsAddModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                                <motion.div initial={{scale:0.95}} animate={{scale:1}} className="relative bg-white w-full max-w-sm rounded-[3.5rem] p-10 shadow-2xl">
-                                    <h3 className="text-2xl font-black mb-8 text-center text-slate-800">عميل جديد</h3>
-                                    <form onSubmit={saveClient} className="space-y-6">
-                                        <input name="name" placeholder="الاسم الكامل للعميل" required className="w-full bg-slate-50 p-5 rounded-2xl border font-bold" />
-                                        <input name="val" type="number" placeholder="قيمة المديونية" required className="w-full bg-slate-50 p-5 rounded-2xl border font-bold" />
-                                        <button className="w-full bg-brand text-white py-5 rounded-3xl font-black text-xl shadow-2xl">تأكيد الإضافة</button>
-                                    </form>
-                                </motion.div>
+                                <motion.div initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} className="relative bg-white w-full max-w-sm rounded-[3.5rem] p-10 shadow-2xl"><h3 className="text-2xl font-black mb-8 text-center text-slate-800 tracking-tight">إضافة سجل عميل</h3><form onSubmit={saveClient} className="space-y-6"><input name="name" placeholder="اسم العميل الكامل" required className="w-full bg-slate-50 p-5 rounded-2xl border font-bold" /><input name="val" type="number" placeholder="قيمة الرصيد المستحق" required className="w-full bg-slate-50 p-5 rounded-2xl border font-bold" /><button className="w-full bg-brand text-white py-5 rounded-3xl font-black text-xl shadow-2xl tracking-tighter">حفظ البيانات</button></form></motion.div>
                             </div>
                         )}
 
@@ -388,48 +318,28 @@
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                                 <motion.div initial={{opacity:0}} animate={{opacity:1}} onClick={()=>setIsHistoryOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
                                 <motion.div initial={{y:'100%'}} animate={{y:0}} className="relative bg-white w-full max-w-3xl rounded-t-[4rem] md:rounded-[4rem] h-[95vh] flex flex-col overflow-hidden shadow-2xl">
-                                    <div className="p-8 border-b flex justify-between items-center bg-slate-50/50">
-                                        <div className="flex items-center gap-4"><div className="w-14 h-14 bg-brand text-white rounded-2xl flex items-center justify-center shadow-lg"><Plus /></div><div><h3 className="font-black text-2xl">{activeClient.name}</h3><p className="text-xs font-black text-slate-400">سجل المعاملات المالي</p></div></div>
-                                        <button onClick={()=>setIsHistoryOpen(false)} className="p-4 bg-white rounded-3xl shadow-sm"><X /></button>
-                                    </div>
+                                    <div className="p-8 border-b flex justify-between items-center bg-slate-50/50 leading-none"><div><h3 className="font-black text-2xl tracking-tighter text-slate-800 mb-1">{activeClient.name}</h3><p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">سجل المعاملات المالي الكامل</p></div><button onClick={()=>setIsHistoryOpen(false)} className="p-4 bg-white rounded-3xl border shadow-sm active:scale-95 transition-all"><X className="w-6 h-6"/></button></div>
                                     <div className="flex-1 overflow-y-auto p-8 space-y-10">
-                                        <div className="overflow-hidden rounded-[2.5rem] border">
-                                            <table className="w-full text-right text-sm">
-                                                <thead className="bg-slate-50 font-black text-slate-400"><tr><th className="p-6">التاريخ</th><th className="p-6">البيان</th><th className="p-6">المبلغ</th><th className="p-6 bg-brand/5">الرصيد</th><th className="p-6">إجراء</th></tr></thead>
-                                                <tbody className="divide-y">
-                                                    {getBalanceList(activeClient.history).map((h, i) => (
-                                                        <tr key={i} className="hover:bg-brand/5 transition-all">
-                                                            <td className="p-6 text-slate-400 font-black">{formatDate(h.date)}</td>
-                                                            <td className="p-6 font-black text-slate-800">{h.type==='payment'?'تحصيل نقدية':'فاتورة مديونية'}{h.notes && <p className="text-[10px] text-brand/60 mt-1">{h.notes}</p>}</td>
-                                                            <td className={`p-6 font-black text-xl ${h.type==='payment'?'text-success':'text-brand'}`}>{h.amount.toLocaleString()}</td>
-                                                            <td className="p-6 font-black text-xl bg-brand/5 text-slate-800">{h.balance?.toLocaleString()}</td>
-                                                            <td className="p-6">
-                                                                <div className="flex gap-2">
-                                                                    <button onClick={()=>setPrintData({type:'receipt', data:{client:activeClient, transaction:h}})} className="p-3 bg-brand-soft text-brand rounded-xl"><Printer className="w-5 h-5"/></button>
-                                                                    <button onClick={()=>{ if(confirm('حذف؟')) setClients(prev=>prev.map(c=>c.id===activeClient.id?{...c, history:c.history.filter((_,idx)=>idx!==(c.history.length-1-i)), paid: h.type==='payment'?c.paid-h.amount:c.paid, total: h.type==='debt'?c.total-h.amount:c.total}:c)); toastMsg('تم الحذف'); }} className="p-3 bg-danger-soft text-danger rounded-xl"><Trash2 className="w-5 h-5"/></button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <button onClick={()=>setPrintData({type:'statement', data:activeClient})} className="w-full bg-brand text-white py-5 rounded-[2rem] font-black text-xl shadow-2xl flex justify-center items-center gap-4"><Printer /> معاينة وطباعة كشف الحساب</button>
+                                        <div className="overflow-hidden rounded-[2.5rem] border"><table className="w-full text-right text-sm"><thead className="bg-slate-50 font-black text-slate-400"><tr><th className="p-6">التاريخ</th><th className="p-6">البيان المالي</th><th className="p-6">القيمة</th><th className="p-6 bg-brand/5">الرصيد الجاري</th><th className="p-6 text-center">إجراءات</th></tr></thead><tbody className="divide-y">
+                                            {getBalanceList(activeClient.history).map((h, i) => (
+                                                <tr key={i} className="hover:bg-brand/5 transition-all"><td className="p-6 text-slate-400 font-black">{formatDate(h.date)}</td><td className="p-6 font-black text-slate-800">{h.type==='payment'?'تحصيل نقدية':'شراء بضاعة / مديونية'}{h.notes && <p className="text-[10px] text-brand/60 mt-1 font-bold">ملاحظة: {h.notes}</p>}</td><td className={`p-6 font-black text-xl tracking-tight ${h.type==='payment'?'text-success':'text-brand'}`}>{h.amount.toLocaleString()}</td><td className="p-6 font-black text-xl bg-brand/5 text-slate-900 tracking-tight">{h.balance?.toLocaleString()}</td><td className="p-6"><div className="flex justify-center gap-2"><button onClick={()=>setPrintData({type:'receipt', data:{client:activeClient, transaction:h}})} className="p-3 bg-brand-soft text-brand rounded-xl"><Printer className="w-5 h-5"/></button><button onClick={()=>{if(confirm('هل تريد حذف هذه المعاملة؟')) setClients(clients.map(c=>c.id===activeClient.id?{...c, history:c.history.filter((_,idx)=>idx!==(c.history.length-1-i)), paid: h.type==='payment'?c.paid-h.amount:c.paid, total: h.type==='debt'?c.total-h.amount:c.total}:c));}} className="p-3 bg-danger-soft text-danger rounded-xl"><Trash2 className="w-5 h-5"/></button></div></td></tr>
+                                            ))}
+                                        </tbody></table></div>
+                                        <button onClick={()=>setPrintData({type:'statement', data:activeClient})} className="w-full bg-brand text-white py-6 rounded-[2.5rem] font-black text-2xl shadow-2xl flex justify-center items-center gap-5 tracking-tighter active:scale-95 transition-all"><Printer className="w-7 h-7"/> استخراج تقرير الحساب</button>
+                                        {user.role === 'admin' && <button onClick={()=>{if(confirm('هل أنت متأكد من حذف العميل نهائياً؟')) { setClients(clients.filter(c=>c.id!==activeClient.id)); setIsHistoryOpen(false); }}} className="w-full py-4 bg-danger/10 text-danger rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-danger hover:text-white transition-all">إزالة العميل من النظام</button>}
                                     </div>
                                 </motion.div>
                             </div>
                         )}
 
-                        {isTxModal.open && (
+                        {(isPayModalOpen || isAddDebtModalOpen) && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                                <motion.div initial={{opacity:0}} animate={{opacity:1}} onClick={()=>setIsTxModal({open:false, type:''})} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                                <motion.div initial={{opacity:0}} animate={{opacity:1}} onClick={()=>{setIsPayModalOpen(false); setIsAddDebtModalOpen(false);}} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
                                 <motion.div initial={{scale:0.95}} animate={{scale:1}} className="relative bg-white w-full max-w-sm rounded-[4rem] p-12 text-center shadow-2xl">
-                                    <h3 className="text-2xl font-black mb-10 text-slate-800">{isTxModal.type === 'payment' ? 'تحصيل نقدية' : 'إضافة مديونية'}</h3>
-                                    <div className="space-y-8">
-                                        <input type="number" value={amount} onChange={e=>setAmount(e.target.value)} className="w-full bg-slate-50 p-8 rounded-[2.5rem] text-6xl font-black text-center shadow-inner outline-none focus:ring-4 focus:ring-brand/10 border-0" placeholder="0" autoFocus />
-                                        <input value={notes} onChange={e=>setNotes(e.target.value)} className="w-full bg-slate-50 p-5 rounded-2xl border text-sm font-bold" placeholder="اكتب ملاحظة (اختياري)..." />
-                                        <button onClick={commitTransaction} className={`w-full py-6 rounded-[2.5rem] font-black text-2xl text-white shadow-2xl transition-all ${isTxModal.type==='payment'?'bg-success shadow-success/20':'bg-brand shadow-brand/20'}`}>اعتماد السجل</button>
-                                    </div>
+                                    <h3 className="text-2xl font-black mb-10 text-slate-800 tracking-tight">{isPayModalOpen ? 'تحصيل قسط مالي' : 'تسجيل مديونية جديدة'}</h3>
+                                    <div className="space-y-8"><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} className="w-full bg-slate-50 p-8 rounded-[2.5rem] text-6xl font-black text-center shadow-inner border-0 focus:ring-4 focus:ring-brand/10 outline-none" placeholder="0" autoFocus />
+                                    <input value={notes} onChange={e=>setNotes(e.target.value)} className="w-full bg-slate-50 p-5 rounded-2xl border text-sm font-bold" placeholder="أضف بياناً للمعاملة..." />
+                                    <button onClick={()=>commitTx(isPayModalOpen?'payment':'debt')} className={`w-full py-7 rounded-[2.5rem] font-black text-2xl text-white shadow-2xl active:scale-95 transition-all ${isPayModalOpen?'bg-success shadow-success/20':'bg-brand shadow-brand/20'}`}>اعتماد السجل</button></div>
                                 </motion.div>
                             </div>
                         )}
@@ -437,84 +347,71 @@
                         {isSettingsOpen && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                                 <motion.div initial={{opacity:0}} animate={{opacity:1}} onClick={()=>setIsSettingsOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-                                <motion.div initial={{scale:0.95}} className="relative bg-white w-full max-w-lg rounded-[3.5rem] h-auto flex flex-col shadow-2xl overflow-hidden p-8">
-                                    <div className="flex gap-2 mb-8"><button onClick={()=>setSettingsTab('general')} className={`flex-1 py-4 rounded-3xl font-black text-sm transition-all ${settingsTab==='general'?'bg-brand text-white shadow-xl':'bg-slate-100 text-slate-400'}`}>بيانات المصنع</button><button onClick={()=>setSettingsTab('users')} className={`flex-1 py-4 rounded-3xl font-black text-sm transition-all ${settingsTab==='users'?'bg-brand text-white shadow-xl':'bg-slate-100 text-slate-400'}`}>المستخدمين</button></div>
+                                <motion.div initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} className="relative bg-white w-full max-w-lg rounded-[3.5rem] h-auto flex flex-col shadow-2xl p-10">
+                                    <div className="flex gap-2 mb-10"><button onClick={()=>setSettingsTab('general')} className={`flex-1 py-4 rounded-3xl font-black text-xs transition-all tracking-widest ${settingsTab==='general'?'bg-brand text-white shadow-xl':'bg-slate-100 text-slate-400'}`}>هوية المصنع</button><button onClick={()=>setSettingsTab('users')} className={`flex-1 py-4 rounded-3xl font-black text-xs transition-all tracking-widest ${settingsTab==='users'?'bg-brand text-white shadow-xl':'bg-slate-100 text-slate-400'}`}>إدارة الموظفين</button></div>
+                                    <div className="space-y-6 overflow-y-auto">
                                     {settingsTab === 'general' ? (
-                                        <div className="space-y-5">
-                                            <div className="space-y-1"><label className="text-[10px] font-black mr-2 text-slate-400">اسم المصنع</label><input value={config.name} onChange={e=>setConfig({...config, name:e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border font-bold" /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black mr-2 text-slate-400">معلومات التواصل</label><textarea value={config.info} onChange={e=>setConfig({...config, info:e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border font-bold h-24" /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black mr-2 text-slate-400">رابط الشعار</label><input value={config.logo} onChange={e=>setConfig({...config, logo:e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border font-bold" /></div>
-                                            <div className="flex gap-3 pt-6"><button onClick={()=>{ const b=new Blob([JSON.stringify(clients)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='backup.json'; a.click(); }} className="flex-1 bg-brand-soft text-brand py-4 rounded-2xl font-black text-[10px] uppercase">تصدير البيانات</button></div>
-                                        </div>
+                                        <div className="space-y-5"><input value={config.name} onChange={e=>setConfig({...config, name:e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border font-black" placeholder="اسم المنشأة" /><textarea value={config.info} onChange={e=>setConfig({...config, info:e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border font-bold h-24" placeholder="معلومات الاتصال" /><input value={config.logo} onChange={e=>setConfig({...config, logo:e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border font-bold" placeholder="رابط الشعار" /><button onClick={()=>showToast('تم تحديث البيانات')} className="w-full bg-brand text-white py-5 rounded-3xl font-black tracking-widest shadow-xl shadow-brand/10">حفظ الإعدادات</button></div>
                                     ) : (
-                                        <div className="space-y-6">
-                                            <form onSubmit={e=>{e.preventDefault(); const fd=new FormData(e.target); setAppUsers([...appUsers, {id:Date.now(), username:fd.get('u'), password:fd.get('p'), role:'user'}]); e.target.reset();}} className="bg-slate-50 p-6 rounded-[2rem] space-y-3">
-                                                <input name="u" placeholder="اسم الموظف" className="w-full p-3 rounded-xl border text-sm" required />
-                                                <input name="p" placeholder="كلمة المرور" className="w-full p-3 rounded-xl border text-sm" required />
-                                                <button className="w-full bg-brand text-white py-3 rounded-xl font-black text-xs">إضافة موظف</button>
-                                            </form>
-                                            {appUsers.map(u=>(<div key={u.id} className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-200"><div><p className="font-black text-sm">{u.username}</p><p className="text-[10px] text-slate-400">موظف إداري</p></div><button onClick={()=>setAppUsers(p=>p.filter(x=>x.id!==u.id))} className="p-2 text-danger"><Trash2/></button></div>))}
-                                        </div>
-                                    )}
+                                        <div className="space-y-6"><form onSubmit={e=>{e.preventDefault(); setAppUsers([...appUsers, {username:e.target.u.value, password:e.target.p.value}]); e.target.reset();}} className="bg-slate-50 p-6 rounded-[2.5rem] space-y-4 border"><input name="u" placeholder="الاسم" className="w-full p-3.5 rounded-xl border text-sm font-bold" required /><input name="p" placeholder="كلمة المرور" className="w-full p-3.5 rounded-xl border text-sm font-bold" required /><button className="w-full bg-brand text-white py-4 rounded-2xl font-black text-xs tracking-widest shadow-lg">إضافة موظف بنجاح</button></form>
+                                        <div className="space-y-2">{appUsers.map((u,i)=>(<div key={i} className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center border"><div><p className="font-black text-sm text-slate-800">{u.username}</p><p className="text-[10px] text-slate-400 font-bold">صلاحيات: موظف تحصيل</p></div><button onClick={()=>setAppUsers(p=>p.filter((_,idx)=>idx!==i))} className="p-3 text-danger hover:bg-danger-soft rounded-xl transition-all"><Trash2 className="w-5 h-5"/></button></div>))}</div></div>
+                                    )}</div>
                                 </motion.div>
                             </div>
                         )}
 
                         {printData && (
-                            <div className="fixed inset-0 z-[99999] bg-white/95 backdrop-blur-3xl overflow-auto print:static pt-28 pb-12">
-                                <div className="no-print fixed top-0 left-0 right-0 bg-white shadow-md p-6 flex justify-between items-center z-[1000]">
-                                    <div className="flex items-center gap-4"><Printer className="text-brand w-8 h-8"/><div><h3 className="font-black text-xl">معاينة المستند المالي</h3><p className="text-xs text-slate-400 font-bold">يرجى التأكد من البيانات قبل الاستخراج</p></div></div>
+                            <div className="fixed inset-0 z-[99999] bg-white/95 backdrop-blur-3xl overflow-auto print:static pt-24 pb-12">
+                                <div className="no-print fixed top-0 left-0 right-0 bg-white shadow-xl shadow-slate-200/50 p-6 flex justify-between items-center z-[1000] border-b">
+                                    <div className="flex items-center gap-4"><div className="w-12 h-12 bg-brand rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand/20"><Printer /></div><div><h3 className="font-black text-xl tracking-tighter">معاينة المستندات المالية</h3><p className="text-[11px] text-slate-400 font-black">تصميم احترافي جاهز للاستخراج والطباعة</p></div></div>
                                     <div className="flex gap-4">
-                                        <button onClick={downloadImage} disabled={isExporting} className="px-10 py-4 bg-brand text-white rounded-[2rem] font-black flex items-center gap-3 shadow-2xl transition-all disabled:opacity-50">{isExporting ? <Loader2 className="animate-spin w-5 h-5" /> : <Image />} حفظ كصورة</button>
-                                        <button onClick={()=>setPrintData(null)} className="px-10 py-4 bg-slate-100 border text-slate-800 font-black rounded-[2rem]">إغلاق القائمة</button>
+                                        <button onClick={downloadImage} disabled={isExporting} className="px-12 py-4 bg-brand text-white rounded-[2.5rem] font-black flex items-center gap-3 shadow-2xl active:scale-95 transition-all disabled:opacity-50">{isExporting ? 'جاري الاستخراج...' : <><Image /> حفظ كصورة</>}</button>
+                                        <button onClick={()=>setPrintData(null)} className="px-10 py-4 bg-slate-50 border border-slate-200 text-slate-700 font-black rounded-[2.5rem]">إغلاق</button>
                                     </div>
                                 </div>
                                 <div className="flex justify-center p-4">
-                                    <div id="print-content-node" className="bg-white shadow-2xl w-full max-w-[210mm] min-h-[1100px] p-12 flex flex-col justify-between overflow-hidden print-layer" dir="rtl">
+                                    <div id="printable-content" className="bg-white shadow-2xl w-full max-w-[210mm] min-h-[1100px] p-12 flex flex-col justify-between overflow-hidden print-area" dir="rtl" style={{border: '1px solid #efefef'}}>
                                         {printData.type === 'statement' ? (
                                             <div>
-                                                <div className="flex justify-between items-start border-b-[10px] border-brand pb-8 mb-12">
-                                                    <div className="flex items-center gap-6"><img src={config.logo} className="w-24 h-24 rounded-[2rem] object-cover shadow-sm border" /><div><h1 className="text-4xl font-black text-brand mb-1">{config.name}</h1><p className="text-sm font-black text-slate-500">{config.info}</p></div></div>
-                                                    <div className="text-left"><h2 className="text-3xl font-black text-slate-800">كشف حساب</h2><p className="text-sm font-black text-slate-400">{new Date().toLocaleDateString('ar-EG')}</p>{exportChunk && <p className="text-sm text-brand font-black mt-2">صفحة {exportChunk.index+1} من {exportChunk.total}</p>}</div>
+                                                <div className="flex justify-between items-start border-b-[12px] border-brand pb-10 mb-14 leading-none">
+                                                    <div className="flex items-center gap-8"><img src={config.logo} className="w-28 h-28 rounded-[3rem] object-cover border-4 shadow-2xl" referrerPolicy="no-referrer" /><div><h1 className="text-5xl font-black text-brand mb-2 tracking-tighter">{config.name}</h1><p className="text-sm font-black text-slate-400">{config.info}</p></div></div>
+                                                    <div className="text-left py-2"><h2 className="text-4xl font-black text-slate-800 tracking-tighter mb-1 uppercase">كشف حساب مالي</h2><p className="text-sm font-black text-slate-400 tracking-widest">التاريخ: {new Date().toLocaleDateString('ar-EG')}</p>{exportChunk && <p className="text-sm text-brand font-black mt-3 bg-brand/5 px-2 py-1 rounded-lg">الصفحة: {exportChunk.index+1} / {exportChunk.total}</p>}</div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-10 mb-12">
-                                                    <div><p className="text-xs text-slate-400 font-black uppercase mb-1">اسم العميل</p><p className="text-3xl font-black text-slate-900">{printData.data.name}</p></div>
-                                                    <div className="flex justify-end gap-3 text-center">
-                                                        <div className="p-4 bg-slate-50 rounded-3xl border min-w-[120px]"><p className="text-[10px] font-black mb-1">مدين</p><p className="text-xl font-black text-brand">{(printData.data.total||0).toLocaleString()}</p></div>
-                                                        <div className="p-4 bg-slate-50 rounded-3xl border min-w-[120px]"><p className="text-[10px] font-black mb-1">دائن</p><p className="text-xl font-black text-success">{(printData.data.paid||0).toLocaleString()}</p></div>
-                                                        <div className="p-4 bg-slate-100 rounded-3xl border min-w-[120px]"><p className="text-[10px] font-black mb-1">الرصيد</p><p className="text-xl font-black text-slate-900">{((printData.data.total||0)-(printData.data.paid||0)).toLocaleString()}</p></div>
+                                                <div className="grid grid-cols-2 gap-14 mb-14">
+                                                    <div className="p-8 bg-slate-50 rounded-[3rem] border-2 border-slate-100 shadow-inner"><p className="text-[11px] text-slate-400 font-black mb-1 uppercase tracking-widest">لقب العميل المحترم</p><p className="text-4xl font-black text-slate-900 tracking-tighter">{printData.data.name}</p></div>
+                                                    <div className="flex justify-end gap-4 text-center">
+                                                        <div className="p-5 bg-slate-50 rounded-[2.5rem] border min-w-[140px] shadow-sm"><p className="text-[11px] font-black uppercase mb-1 opacity-50">إجمالي مدين</p><p className="text-2xl font-black text-brand tracking-tight">{(printData.data.total||0).toLocaleString()}</p></div>
+                                                        <div className="p-5 bg-slate-50 rounded-[2.5rem] border min-w-[140px] shadow-sm"><p className="text-[11px] font-black uppercase mb-1 opacity-50">إجمالي دائن</p><p className="text-2xl font-black text-success tracking-tight">{(printData.data.paid||0).toLocaleString()}</p></div>
+                                                        <div className="p-5 bg-slate-900 rounded-[2.5rem] border min-w-[140px] shadow-2xl text-white"><p className="text-[11px] font-black uppercase mb-1 opacity-70">الرصيد النهائي</p><p className="text-2xl font-black tracking-tight">{((printData.data.total||0)-(printData.data.paid||0)).toLocaleString()}</p></div>
                                                     </div>
                                                 </div>
-                                                <table className="w-full text-right border-collapse border-2 border-slate-300">
-                                                    <thead className="bg-slate-50 text-slate-500 font-black"><tr><th className="p-5 border text-sm">التاريخ</th><th className="p-5 border text-sm">البيان المالي</th><th className="p-5 border text-sm">مدين (+)</th><th className="p-5 border text-sm">دائن (-)</th><th className="p-5 border text-sm bg-slate-100 text-slate-900">الرصيد الجاري</th></tr></thead>
-                                                    <tbody>
+                                                <table className="w-full text-right border-collapse border-4 border-slate-300">
+                                                    <thead className="bg-slate-50 text-slate-500 font-black"><tr><th className="p-5 border-2 text-base">تاريخ السند</th><th className="p-5 border-2 text-base">تفاصيل البيان المالي</th><th className="p-5 border-2 text-base">مدين (+)</th><th className="p-5 border-2 text-base">دائن (-)</th><th className="p-5 border-2 text-base bg-slate-900 text-white">الرصيد الجاري</th></tr></thead>
+                                                    <tbody className="divide-y-2 divide-slate-200">
                                                         {(exportChunk ? getBalanceList(printData.data.history).reverse().slice(exportChunk.index*15, (exportChunk.index+1)*15) : getBalanceList(printData.data.history).reverse()).map((h, i) => (
-                                                            <tr key={i} className="border-b-2 hover:bg-slate-50 transition-colors">
-                                                                <td className="p-5 border font-black text-slate-500">{formatDate(h.date)}</td>
-                                                                <td className="p-5 border font-black text-slate-800">{h.type==='payment'?'تحصيل نقدية':'شراء / مديونية'}<span className="block text-[10px] font-normal opacity-50 mt-1">بواسطة: {h.user}</span>{h.notes && <span className="block text-[10px] text-brand font-black mt-1">ملاحظة: {h.notes}</span>}</td>
-                                                                <td className="p-5 border text-brand font-black text-xl">{h.type==='debt'?h.amount.toLocaleString():'-'}</td>
-                                                                <td className="p-5 border text-success font-black text-xl">{h.type==='payment'?h.amount.toLocaleString():'-'}</td>
-                                                                <td className="p-5 border font-black text-xl bg-slate-50 text-slate-900">{h.balance?.toLocaleString()}</td>
-                                                            </tr>
+                                                            <tr key={i} className="hover:bg-slate-50 transition-colors"><td className="p-5 border-2 font-black text-slate-500">{formatDate(h.date)}</td><td className="p-5 border-2 font-black text-slate-800">{h.type==='payment'?'تحصيل قسط مالي':'فاتورة / مديونية'}<span className="block text-[11px] font-normal opacity-50 mt-1 uppercase tracking-widest font-sans">بواسطة: {h.user}</span>{h.notes && <span className="block text-[11px] text-brand font-black mt-2 bg-brand/5 inline-block p-1 rounded-md">ملاحظة: {h.notes}</span>}</td><td className="p-5 border-2 text-brand font-black text-2xl tracking-tight">{h.type==='debt'?h.amount.toLocaleString():'-'}</td><td className="p-5 border-2 text-success font-black text-2xl tracking-tight">{h.type==='payment'?h.amount.toLocaleString():'-'}</td><td className="p-5 border-2 font-black text-2xl bg-slate-50 text-slate-900 tracking-tight leading-none">{h.balance?.toLocaleString()} <span className="text-[10px] font-normal opacity-40">ج.م</span></td></tr>
                                                         ))}
                                                     </tbody>
                                                 </table>
                                             </div>
                                         ) : (
-                                            <div className="p-16">
-                                                <div className="flex justify-between items-center mb-24 border-b-8 border-brand pb-12">
-                                                    <div className="flex items-center gap-10"><img src={config.logo} className="w-32 h-32 rounded-[3.5rem] shadow-2xl border-2" /><div><h1 className="text-5xl font-black text-brand mb-2">{config.name}</h1><p className="text-base font-black text-slate-400">{config.info}</p></div></div>
-                                                    <div className="bg-brand text-white px-12 py-5 rounded-[2rem] shadow-2xl"><h2 className="text-xl font-black tracking-tighter uppercase">{printData.data.transaction.type==='payment'?'إيصال تحصيل نقدية':'إيصال مديونية'}</h2></div>
+                                            <div className="p-20">
+                                                <div className="flex justify-between items-center mb-32 border-b-[12px] border-brand pb-14 leading-none">
+                                                    <div className="flex items-center gap-12"><img src={config.logo} className="w-36 h-36 rounded-[4rem] shadow-2xl border-4" referrerPolicy="no-referrer" /><div><h1 className="text-6xl font-black text-brand mb-3 tracking-tighter">{config.name}</h1><p className="text-lg font-black text-slate-400">{config.info}</p></div></div>
+                                                    <div className="bg-brand text-white px-14 py-6 rounded-[2.5rem] shadow-2xl"><h2 className="text-3xl font-black tracking-tighter uppercase">{printData.data.transaction.type==='payment'?'سند تحصيل نقدية':'سند قيد مديونية'}</h2></div>
                                                 </div>
-                                                <div className="bg-slate-50 p-24 rounded-[6rem] text-center space-y-12 border-4 border-slate-100 shadow-inner">
-                                                    <p className="text-4xl font-black text-slate-800">لقد تم تسجيل مبلغ وقدره</p>
-                                                    <p className="text-[10rem] font-black text-brand leading-none">{printData.data.transaction.amount.toLocaleString()} <span className="text-4xl font-normal">ج.م</span></p>
-                                                    <p className="text-2xl font-black text-slate-500">في الحساب المالي الخاص بالسيد: {printData.data.client.name}</p>
-                                                    {printData.data.transaction.notes && <div className="mt-16 pt-12 border-t border-slate-200 text-right"><p className="text-sm font-black text-brand mb-2 uppercase">ملاحظات العملية</p><p className="text-2xl font-black text-slate-700 leading-relaxed">{printData.data.transaction.notes}</p></div>}
+                                                <div className="bg-slate-50 p-24 rounded-[7rem] text-center border-8 border-slate-100 shadow-inner flex flex-col items-center">
+                                                    <p className="text-5xl font-black text-slate-800 leading-none mb-12">وصلنا من السيد المحترم: {printData.data.client.name}</p>
+                                                    <p className="text-[14rem] font-black text-brand leading-none mb-4 drop-shadow-xl">{printData.data.transaction.amount.toLocaleString()} <span className="text-6xl font-normal opacity-60">ج.م</span></p>
+                                                    <p className="text-4xl font-black text-slate-400 mt-10 tracking-widest leading-relaxed">وذلك عن: {printData.data.transaction.notes || (printData.data.transaction.type==='payment'?'دفعة من الحساب':'بضاعة / مديونية حساب')}</p>
+                                                    <div className="w-full mt-24 pt-16 border-t-4 border-slate-200 grid grid-cols-2 gap-20">
+                                                        <div className="text-right"><p className="text-xs font-black text-slate-400 mb-2 uppercase tracking-[0.3em]">تم التحرير بواسطة</p><p className="text-3xl font-black text-slate-800">{printData.data.transaction.user}</p></div>
+                                                        <div className="text-left"><p className="text-xs font-black text-slate-400 mb-2 uppercase tracking-[0.3em]">خاتم المنشأة</p><div className="w-32 h-32 border-4 border-brand/20 rounded-full mx-auto flex items-center justify-center opacity-30"><Factory className="w-16 h-16 text-brand" /></div></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
-                                        <div className="mt-auto pt-12 border-t-2 text-center text-sm font-black text-slate-900">© 2026 - جميع الحقوق محفوظة | تطوير: سعيد أبو زيد | 01069001132</div>
+                                        <div className="mt-auto pt-16 border-t-8 border-slate-50 text-center text-lg font-black text-slate-900 tracking-tight">© 2026 - جميع الحقوق محفوظة | تطوير: سعيد أبو زيد | 01069001132</div>
                                     </div>
                                 </div>
                             </div>
@@ -522,20 +419,29 @@
                     </AnimatePresence>
 
                     {/* Notification System */}
-                    <AnimatePresence>{toast && <motion.div initial={{y:150, x:'-50%'}} animate={{y:0, x:'-50%'}} exit={{y:150, x:'-50%'}} className={`fixed bottom-12 left-1/2 -translate-x-1/2 px-14 py-6 rounded-[3rem] shadow-2xl z-[2000] font-black text-lg text-white ${toast.type==='success'?'bg-success':'bg-danger'}`}>{toast.msg}</motion.div>}</AnimatePresence>
+                    <AnimatePresence>{toast && <motion.div initial={{y:150, x:'-50%'}} animate={{y:0, x:'-50%'}} exit={{y:150, x:'-50%'}} className={`fixed bottom-12 left-1/2 -translate-x-1/2 px-16 py-7 rounded-[3.5rem] shadow-2xl z-[2000] font-black text-xl text-white ${toast.type==='success'?'bg-success shadow-success/40':'bg-danger shadow-danger/40'}`}>{toast.msg}</motion.div>}</AnimatePresence>
                     
-                    <footer className="footer-fixed">© 2026 - جميع الحقوق محفوظة | تطوير: سعيد أبو زيد | 01069001132</footer>
+                    <footer className="main-footer no-print">© 2026 - جميع الحقوق محفوظة | تطوير: سعيد أبو زيد | 01069001132</footer>
                 </div>
             );
         }
 
-        // Mount the Application
+        // Render Application to DOM
         try {
-            const rootEl = document.getElementById('root');
-            if (rootEl) {
-                ReactDOM.createRoot(rootEl).render(<MainApp />);
+            const rootContainer = document.getElementById('root');
+            if (rootContainer) {
+                const root = ReactDOM.createRoot(rootContainer);
+                root.render(<App />);
             }
-        } catch(e) { console.error('Render Error:', e); }
+        } catch (e) {
+            console.error('Render Error:', e);
+            document.body.innerHTML = `
+                <div style="color:#ef4444; background:#fef2f2; border:1px solid #fecaca; text-align:center; padding:60px; font-family:sans-serif; border-radius:30px; margin:40px;">
+                    <h2 style="font-weight:900;">خطأ فادح في تحميل الواجهة</h2>
+                    <p>${e.message}</p>
+                    <p style="margin-top:20px; font-size:14px; opacity:0.7;">تأكد من تحديث المتصفح واتصال الإنترنت.</p>
+                </div>`;
+        }
     </script>
 </body>
 </html>
